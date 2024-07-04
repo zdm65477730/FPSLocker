@@ -1342,6 +1342,7 @@ public:
 		tsl::hlp::doWithSmSession([&lanPath, &jsonStr]{
 			tsl::tr::InitTrans(lanPath, jsonStr);
 		});
+		fsdevUnmountDevice("sdmc");
 
 		tsl::hlp::doWithSmSession([]{
 			apmInitialize();
@@ -1350,10 +1351,15 @@ public:
 			if (R_SUCCEEDED(setsysGetProductModel(&model))) {
 				if (model == SetSysProductModel_Aula) {
 					isOLED = true;
-					remove("sdmc:/SaltySD/flags/displaysync.flag");
+					tsl::hlp::doWithSDCardHandle([] {
+						remove("sdmc:/SaltySD/flags/displaysync.flag");
+					});
 				}
 			}
-			FILE* file = fopen("sdmc:/SaltySD/flags/displaysync.flag", "rb");
+			FILE* file = NULL;
+			tsl::hlp::doWithSDCardHandle([&file] {
+				file = fopen("sdmc:/SaltySD/flags/displaysync.flag", "rb");
+			});
 			if (file) {
 				displaySync = true;
 				fclose(file);
@@ -1419,7 +1425,6 @@ public:
 		threadClose(&t0);
 		shmemClose(&_sharedmemory);
 		nsExit();
-		fsdevUnmountDevice("sdmc");
 		apmExit();
 	}  // Callet at the end to clean up all services previously initialized
 
