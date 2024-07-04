@@ -40,11 +40,15 @@ include $(DEVKITPRO)/libnx/switch_rules
 APP_TITLE	:=	FPSLocker
 APP_VERSION	:=	2.0.0
 
-TARGET		:=	FPSLocker
+ifeq ($(RELEASE),)
+	APP_VERSION	:=	$(APP_VERSION)-$(shell git describe --always)
+endif
+
+TARGET		:=	$(APP_TITLE)
 BUILD		:=	build
 SOURCES		:=	source source/c4 source/c4/yml source/tinyexpr
 DATA		:=	data
-INCLUDES	:=	include libs/libtesla/include source
+INCLUDES	:=	include ../libs/libtesla/include source
 
 NO_ICON		:=  1
 
@@ -56,9 +60,9 @@ ARCH		:= -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS		:= -g -Wall -Os -ffunction-sections \
 			$(ARCH) $(DEFINES)
 
-CFLAGS		+= $(INCLUDE) -D__SWITCH__ -DAPP_VERSION="\"$(APP_VERSION)\""
+CFLAGS		+= $(INCLUDE) -D__SWITCH__ -DAPPTITLE="\"$(APP_TITLE)\"" -DVERSION="\"$(APP_VERSION)\""
 
-CXXFLAGS	:= $(CFLAGS) -fno-exceptions -std=c++23
+CXXFLAGS	:= $(CFLAGS) -fexceptions -std=c++23
 
 ASFLAGS		:= -g $(ARCH)
 LDFLAGS		= -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)

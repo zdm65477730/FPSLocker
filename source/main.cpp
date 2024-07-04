@@ -6,6 +6,9 @@
 #include "SaltyNX.h"
 #include "Lock.hpp"
 #include "Utils.hpp"
+
+using namespace tsl;
+
 #include <curl/curl.h>
 
 bool FileDownloaded = false;
@@ -18,22 +21,20 @@ bool isDocked = false;
 
 Result downloadPatch() {
 
-    static const SocketInitConfig socketInitConfig = {
+	static const SocketInitConfig socketInitConfig = {
+		.tcp_tx_buf_size = 0x800,
+		.tcp_rx_buf_size = 0x800,
+		.tcp_tx_buf_max_size = 0x8000,
+		.tcp_rx_buf_max_size = 0x8000,
 
-        .tcp_tx_buf_size = 0x800,
-        .tcp_rx_buf_size = 0x800,
-        .tcp_tx_buf_max_size = 0x8000,
-        .tcp_rx_buf_max_size = 0x8000,
+		.udp_tx_buf_size = 0,
+		.udp_rx_buf_size = 0,
 
-        .udp_tx_buf_size = 0,
-        .udp_rx_buf_size = 0,
-
-        .sb_efficiency = 1,
+		.sb_efficiency = 1,
 		.bsd_service_type = BsdServiceType_Auto
-    };
+	};
 
 	smInitialize();
-
 
 	nifmInitialize(NifmServiceType_System);
 	u32 dummy = 0;
@@ -48,17 +49,16 @@ Result downloadPatch() {
 
 	socketInitialize(&socketInitConfig);
 
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+	curl_global_init(CURL_GLOBAL_DEFAULT);
 	CURL *curl = curl_easy_init();
 
 	Result error_code = 0;
 
-    if (curl) {
-
+	if (curl) {
 		char download_path[256] = "";
 		char file_path[192] = "";
 		snprintf(download_path, sizeof(download_path), "sdmc:/SaltySD/plugins/FPSLocker/patches/%016lX/", TID);
-		
+
 		std::filesystem::create_directories(download_path);
 
 		snprintf(file_path, sizeof(file_path), "sdmc:/SaltySD/plugins/FPSLocker/patches/%016lX/temp.yaml", TID);
@@ -73,17 +73,17 @@ Result downloadPatch() {
 		}
 
 		snprintf(download_path, sizeof(download_path), "https://raw.githubusercontent.com/masagrator/FPSLocker-Warehouse/v3/SaltySD/plugins/FPSLocker/patches/%016lX/%016lX.yaml", TID, BID);
-        curl_easy_setopt(curl, CURLOPT_URL, download_path);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0");
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-        curl_easy_setopt(curl, CURLOPT_NOBODY, 0L);
-        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+		curl_easy_setopt(curl, CURLOPT_URL, download_path);
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0");
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+		curl_easy_setopt(curl, CURLOPT_NOBODY, 0L);
+		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
 
-        CURLcode res = curl_easy_perform(curl);
+		CURLcode res = curl_easy_perform(curl);
 
 		if (res != CURLE_OK) {
 			fclose(fp);
@@ -183,10 +183,10 @@ Result downloadPatch() {
 			}
 		}
 
-        curl_easy_cleanup(curl);
-    }
+		curl_easy_cleanup(curl);
+	}
 
-    curl_global_cleanup();
+	curl_global_cleanup();
 	socketExit();
 	smExit();
 	return error_code;
@@ -204,16 +204,16 @@ void loopThread(void*) {
 
 class SetBuffers : public tsl::Gui {
 public:
-    SetBuffers() {}
+	SetBuffers() {}
 
-    virtual tsl::elm::Element* createUI() override {
-		auto frame = new tsl::elm::OverlayFrame("NVN Set Buffering", "");
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame("NVNSetBufferingSetBuffersOverlayFrame"_tr, "");
 
 		auto list = new tsl::elm::List();
-		list->addItem(new tsl::elm::CategoryHeader("It will be applied on next game boot.", false));
-		list->addItem(new tsl::elm::CategoryHeader("Remember to save settings after change.", true));
-		auto *clickableListItem = new tsl::elm::ListItem("Double");
-		clickableListItem->setClickListener([](u64 keys) { 
+		list->addItem(new tsl::elm::CategoryHeader("AppliedNextGameBootSetBuffersListItemCategoryHeader"_tr, false));
+		list->addItem(new tsl::elm::CategoryHeader("RememberSaveSettingsSetBuffersListItemCategoryHeader"_tr, true));
+		auto *clickableListItem = new tsl::elm::ListItem("DoubleSetBuffersListItem"_tr);
+		clickableListItem->setClickListener([](u64 keys) {
 			if ((keys & HidNpadButton_A) && PluginRunning) {
 				SetBuffers_save = 2;
 				tsl::goBack();
@@ -224,8 +224,8 @@ public:
 		list->addItem(clickableListItem);
 
 		if (*SetActiveBuffers_shared == 2 && *Buffers_shared == 3 && !SetBuffers_save) {
-			auto *clickableListItem2 = new tsl::elm::ListItem("Triple (force)");
-			clickableListItem2->setClickListener([](u64 keys) { 
+			auto *clickableListItem2 = new tsl::elm::ListItem("TripleForceSetBuffersListItem"_tr);
+			clickableListItem2->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
 					SetBuffers_save = 3;
 					tsl::goBack();
@@ -234,10 +234,9 @@ public:
 				return false;
 			});
 			list->addItem(clickableListItem2);
-		}
-		else {
-			auto *clickableListItem2 = new tsl::elm::ListItem("Triple");
-			clickableListItem2->setClickListener([](u64 keys) { 
+		} else {
+			auto *clickableListItem2 = new tsl::elm::ListItem("TripleSetBuffersListItem"_tr);
+			clickableListItem2->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
 					if (*Buffers_shared == 4) SetBuffers_save = 3;
 					else SetBuffers_save = 0;
@@ -248,11 +247,11 @@ public:
 			});
 			list->addItem(clickableListItem2);
 		}
-		
+
 		if (*Buffers_shared == 4) {
 			if (*SetActiveBuffers_shared < 4 && *SetActiveBuffers_shared > 0 && *Buffers_shared == 4) {
-				auto *clickableListItem3 = new tsl::elm::ListItem("Quadruple (force)");
-				clickableListItem3->setClickListener([](u64 keys) { 
+				auto *clickableListItem3 = new tsl::elm::ListItem("QuadrupleForceSetBuffersListItem"_tr);
+				clickableListItem3->setClickListener([](u64 keys) {
 					if ((keys & HidNpadButton_A) && PluginRunning) {
 						SetBuffers_save = 4;
 						tsl::goBack();
@@ -260,11 +259,10 @@ public:
 					}
 					return false;
 				});
-				list->addItem(clickableListItem3);	
-			}
-			else {
-				auto *clickableListItem3 = new tsl::elm::ListItem("Quadruple");
-				clickableListItem3->setClickListener([](u64 keys) { 
+				list->addItem(clickableListItem3);
+			} else {
+				auto *clickableListItem3 = new tsl::elm::ListItem("QuadrupleSetBuffersListItem"_tr);
+				clickableListItem3->setClickListener([](u64 keys) {
 					if ((keys & HidNpadButton_A) && PluginRunning) {
 						SetBuffers_save = 0;
 						tsl::goBack();
@@ -278,23 +276,23 @@ public:
 
 		frame->setContent(list);
 
-        return frame;
-    }
+		return frame;
+	}
 };
 
 class SyncMode : public tsl::Gui {
 public:
-    SyncMode() {}
+	SyncMode() {}
 
-    virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("NVN Window Sync Wait", "Mode");
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame("NVNWindowSyncWaitSyncModeOverlayFrame"_tr, "SyncModeSyncModeOverlayFrameSubtitle"_tr);
 
 		auto list = new tsl::elm::List();
 
-		auto *clickableListItem = new tsl::elm::ListItem("Enabled");
-		clickableListItem->setClickListener([](u64 keys) { 
+		auto *clickableListItem = new tsl::elm::ListItem("EnabledSyncModeSyncModeListItem"_tr);
+		clickableListItem->setClickListener([](u64 keys) {
 			if ((keys & HidNpadButton_A) && PluginRunning) {
-				ZeroSyncMode = "On";
+				ZeroSyncMode = "OnSyncModeAdvancedGuiListItemText"_tr.c_str();
 				*ZeroSync_shared = 0;
 				tsl::goBack();
 				tsl::goBack();
@@ -304,10 +302,10 @@ public:
 		});
 		list->addItem(clickableListItem);
 
-		auto *clickableListItem2 = new tsl::elm::ListItem("Semi-Enabled");
-		clickableListItem2->setClickListener([](u64 keys) { 
+		auto *clickableListItem2 = new tsl::elm::ListItem("SemiEnabledSyncModeSyncModeListItem"_tr);
+		clickableListItem2->setClickListener([](u64 keys) {
 			if ((keys & HidNpadButton_A) && PluginRunning) {
-				ZeroSyncMode = "Semi";
+				ZeroSyncMode = "SemiSyncModeAdvancedGuiListItemText"_tr.c_str();
 				*ZeroSync_shared = 2;
 				tsl::goBack();
 				tsl::goBack();
@@ -317,10 +315,10 @@ public:
 		});
 		list->addItem(clickableListItem2);
 
-		auto *clickableListItem3 = new tsl::elm::ListItem("Disabled");
-		clickableListItem3->setClickListener([](u64 keys) { 
+		auto *clickableListItem3 = new tsl::elm::ListItem("DisabledSyncModeSyncModeListItem"_tr);
+		clickableListItem3->setClickListener([](u64 keys) {
 			if ((keys & HidNpadButton_A) && PluginRunning) {
-				ZeroSyncMode = "Off";
+				ZeroSyncMode = "OffSyncModeAdvancedGuiListItemText"_tr.c_str();
 				*ZeroSync_shared = 1;
 				tsl::goBack();
 				tsl::goBack();
@@ -329,89 +327,82 @@ public:
 			return false;
 		});
 		list->addItem(clickableListItem3);
-		
-        frame->setContent(list);
 
-        return frame;
-    }
+		frame->setContent(list);
+
+		return frame;
+	}
 };
 
 class AdvancedGui : public tsl::Gui {
 public:
-    AdvancedGui() {
-		configValid = LOCK::readConfig(&configPath[0]);
-		if (R_FAILED(configValid)) {
-			if (configValid == 0x202) {
-				sprintf(&lockInvalid[0], "Game config file not found\nTID: %016lX\nBID: %016lX", TID, BID);
-			}
-			else sprintf(&lockInvalid[0], "Game config error: 0x%X", configValid);
-		}
-		else {
-			patchValid = checkFile(&patchPath[0]);
-			if (R_FAILED(patchValid)) {
-				if (!FileDownloaded) {
-					sprintf(&patchChar[0], "Patch file doesn't exist.");
+	AdvancedGui() {
+		tsl::hlp::doWithSDCardHandle([] {
+			configValid = LOCK::readConfig(&configPath[0]);
+			if (R_FAILED(configValid)) {
+				if (configValid == 0x202) {
+					sprintf(&lockInvalid[0], "ConfigFileNotFoundAdvancedGuiCustomDrawerText"_tr.c_str());
+				} else sprintf(&lockInvalid[0], "ConfigErrorAdvancedGuiCustomDrawerText"_tr.c_str(), configValid);
+			} else {
+				patchValid = checkFile(&patchPath[0]);
+				if (R_FAILED(patchValid)) {
+					if (!FileDownloaded) {
+						sprintf(&patchChar[0], "PatchFileNotExistAdvancedGuiCustomDrawerText"_tr.c_str());
+					}
+					else {
+						sprintf(&patchChar[0], "NewConfigDownloadSuccessAdvancedGuiCustomDrawerText"_tr.c_str());
+					}
 				}
-				else {
-					sprintf(&patchChar[0], "New config downloaded successfully.");
-				}
+				else sprintf(&patchChar[0], "PatchFileExistAdvancedGuiCustomDrawerText"_tr.c_str());
 			}
-			else sprintf(&patchChar[0], "Patch file exists.");
-		}
-		switch(*ZeroSync_shared) {
-			case 0:
-				ZeroSyncMode = "On";
-				break;
-			case 1:
-				ZeroSyncMode = "Off";
-				break;
-			case 2:
-				ZeroSyncMode = "Semi";
-		}
+			switch(*ZeroSync_shared) {
+				case 0:
+					ZeroSyncMode = "OnSyncModeAdvancedGuiListItemText"_tr.c_str();
+					break;
+				case 1:
+					ZeroSyncMode = "OffSyncModeAdvancedGuiListItemText"_tr.c_str();
+					break;
+				case 2:
+					ZeroSyncMode = "SemiSyncModeAdvancedGuiListItemText"_tr.c_str();
+			}
+		});
 	}
 
 	size_t base_height = 68;
 
-    virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", "Advanced settings");
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "AdvancedSettingsAdvancedGuiOverlayFrameSubTitle"_tr);
 
 		auto list = new tsl::elm::List();
 
 		if (configValid == 0x202) {
 			base_height = 128;
-		}
-		else if (R_SUCCEEDED(configValid)) {
+		} else if (R_SUCCEEDED(configValid)) {
 			base_height = 108;
-		}
-		else base_height = 68;
+		} else base_height = 68;
 
 		list->addItem(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-
 			if (R_SUCCEEDED(configValid)) {
-				renderer->drawString("Found valid config file!", false, x, y+20, 20, renderer->a(0xFFFF));
+				renderer->drawString("ConfigFileValidAdvancedGuiCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xFFFF));
 				renderer->drawString(&patchChar[0], false, x, y+40, 20, renderer->a(0xFFFF));
 				renderer->drawString(&patchAppliedChar[0], false, x, y+60, 20, renderer->a(0xFFFF));
 				renderer->drawString(&nvnBuffers[0], false, x, y+82, 20, renderer->a(0xFFFF));
-			}
-			else {
+			} else {
 				renderer->drawString(&lockInvalid[0], false, x, y+20, 20, renderer->a(0xFFFF));
 				if (configValid == 0x202) {
 					renderer->drawString(&nvnBuffers[0], false, x, y+85, 20, renderer->a(0xFFFF));
 					renderer->drawString(&patchChar[0], false, x, y+105, 20, renderer->a(0xFFFF));
-				}
-				else renderer->drawString(&nvnBuffers[0], false, x, y+40, 20, renderer->a(0xFFFF));
+				} else renderer->drawString(&nvnBuffers[0], false, x, y+40, 20, renderer->a(0xFFFF));
 			}
-				
-
 		}), base_height);
 
 		if (*API_shared) {
 			switch(*API_shared) {
 				case 1: {
-					list->addItem(new tsl::elm::CategoryHeader("NVN", true));
+					list->addItem(new tsl::elm::CategoryHeader("NVNAdvancedGuiCategoryHeader"_tr, true));
 					if (*Buffers_shared == 2 || *SetBuffers_shared == 2 || *ActiveBuffers_shared == 2) {
-						auto *clickableListItem3 = new tsl::elm::MiniListItem("Window Sync Wait", ZeroSyncMode);
-						clickableListItem3->setClickListener([](u64 keys) { 
+						auto *clickableListItem3 = new tsl::elm::MiniListItem("SyncWaitAdvancedGuiListItem"_tr, ZeroSyncMode);
+						clickableListItem3->setClickListener([](u64 keys) {
 							if ((keys & HidNpadButton_A) && PluginRunning) {
 								tsl::changeTo<SyncMode>();
 								return true;
@@ -421,8 +412,8 @@ public:
 						list->addItem(clickableListItem3);
 					}
 					if (*Buffers_shared > 2) {
-						auto *clickableListItem3 = new tsl::elm::MiniListItem("Set Buffering");
-						clickableListItem3->setClickListener([](u64 keys) { 
+						auto *clickableListItem3 = new tsl::elm::MiniListItem("SetBufferingAdvancedGuiListItem"_tr);
+						clickableListItem3->setClickListener([](u64 keys) {
 							if ((keys & HidNpadButton_A) && PluginRunning) {
 								tsl::changeTo<SetBuffers>();
 								return true;
@@ -434,36 +425,40 @@ public:
 					break;
 				}
 				case 2:
-					list->addItem(new tsl::elm::CategoryHeader("EGL", true));
+					list->addItem(new tsl::elm::CategoryHeader("EGLAdvancedGuiCategoryHeader"_tr, true));
 					break;
 				case 3:
-					list->addItem(new tsl::elm::CategoryHeader("Vulkan", true));
+					list->addItem(new tsl::elm::CategoryHeader("VulkanAdvancedGuiCategoryHeader"_tr, true));
 			}
 		}
 
 		if (R_SUCCEEDED(configValid)) {
-			list->addItem(new tsl::elm::CategoryHeader("It will be applied on next game boot", true));
-			auto *clickableListItem = new tsl::elm::MiniListItem("Convert config to patch file");
-			clickableListItem->setClickListener([](u64 keys) { 
+			list->addItem(new tsl::elm::CategoryHeader("PatchWillBeAppliedNextGameBootAdvancedGuiCategoryHeader"_tr, true));
+			auto *clickableListItem = new tsl::elm::MiniListItem("ConvertConfigToPatchFileAdvancedGuiListItem"_tr);
+			clickableListItem->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
-					patchValid = LOCK::createPatch(&patchPath[0]);
+					tsl::hlp::doWithSDCardHandle([] {
+						patchValid = LOCK::createPatch(&patchPath[0]);
+					});
 					if (R_SUCCEEDED(patchValid)) {
-						sprintf(&patchChar[0], "Patch file created successfully.");
+						sprintf(&patchChar[0], "PatchFileCreatedSuccessAdvancedGuiListItemText"_tr.c_str());
 					}
-					else sprintf(&patchChar[0], "Error while creating patch: 0x%x", patchValid);
+					else sprintf(&patchChar[0], "PatchFileCreateFailedAdvancedGuiListItemText"_tr.c_str(), patchValid);
 					return true;
 				}
 				return false;
 			});
 			list->addItem(clickableListItem);
 
-			auto *clickableListItem2 = new tsl::elm::MiniListItem("Delete patch file");
-			clickableListItem2->setClickListener([](u64 keys) { 
+			auto *clickableListItem2 = new tsl::elm::MiniListItem("DeletePatchFileAdvancedGuiListItem"_tr);
+			clickableListItem2->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
 					if (R_SUCCEEDED(patchValid)) {
-						remove(&patchPath[0]);
+						tsl::hlp::doWithSDCardHandle([] {
+							remove(&patchPath[0]);
+						});
 						patchValid = 0x202;
-						sprintf(&patchChar[0], "Patch file deleted successfully.");
+						sprintf(&patchChar[0], "DeletePatchSuccessfulFileAdvancedGuiListItemText"_tr.c_str());
 					}
 					return true;
 				}
@@ -471,36 +466,38 @@ public:
 			});
 			list->addItem(clickableListItem2);
 		}
-		list->addItem(new tsl::elm::CategoryHeader("If exists, it will also remove existing patch file.", false));
-		auto *clickableListItem4 = new tsl::elm::MiniListItem("Check/download config file");
+
+		list->addItem(new tsl::elm::CategoryHeader("RemoveExistPatchFileAdvancedGuiListItemText"_tr, false));
+		auto *clickableListItem4 = new tsl::elm::MiniListItem("CheckOrDownloadConfigFileAdvancedGuiListItemText"_tr);
 		clickableListItem4->setClickListener([](u64 keys) { 
 			if ((keys & HidNpadButton_A) && PluginRunning) {
-
-				Result rc = downloadPatch();
-				if (rc == 0x212 || rc == 0x312) {
-					sprintf(&patchChar[0], "Patch is not available! RC: 0x%x", rc);
-				}
-				else if (rc == 0x404) {
-					sprintf(&patchChar[0], "Patch is not available! Err 404");
-				}
-				else if (rc == 0x104) {
-					sprintf(&patchChar[0], "No new config available.");
-				}
-				else if (rc == 0x412) {
-					sprintf(&patchChar[0], "Internet connection not available!");
-				}
-				else if (R_SUCCEEDED(rc)) {
-					FILE* fp = fopen(patchPath, "rb");
-					if (fp) {
-						fclose(fp);
-						remove(patchPath);
+				tsl::hlp::doWithSDCardHandle([] {
+					Result rc = downloadPatch();
+					if (rc == 0x212 || rc == 0x312) {
+						sprintf(&patchChar[0], "PatchNotAvailableAdvancedGuiListItemText"_tr.c_str(), rc);
 					}
-					tsl::goBack();
-					tsl::changeTo<AdvancedGui>();
-				}
-				else {
-					sprintf(&patchChar[0], "Patch downloading failed! RC: 0x%x", rc);
-				}
+					else if (rc == 0x404) {
+						sprintf(&patchChar[0], "PatchNotAvailable404AdvancedGuiListItemText"_tr.c_str());
+					}
+					else if (rc == 0x104) {
+						sprintf(&patchChar[0], "NoNewConfigAvailableAdvancedGuiListItemText"_tr.c_str());
+					}
+					else if (rc == 0x412) {
+						sprintf(&patchChar[0], "InternetConnectionNotAvailableAdvancedGuiListItemText"_tr.c_str());
+					}
+					else if (R_SUCCEEDED(rc)) {
+						FILE* fp = fopen(patchPath, "rb");
+						if (fp) {
+							fclose(fp);
+							remove(patchPath);
+						}
+						tsl::goBack();
+						tsl::changeTo<AdvancedGui>();
+					}
+					else {
+						sprintf(&patchChar[0], "PatchDownloadFailedAdvancedGuiListItemText"_tr.c_str(), rc);
+					}
+				});
 				return true;
 			}
 			return false;
@@ -509,8 +506,8 @@ public:
 
 		frame->setContent(list);
 
-        return frame;
-    }
+		return frame;
+	}
 
 	virtual void update() override {
 		static uint8_t i = 10;
@@ -518,15 +515,13 @@ public:
 		if (PluginRunning) {
 			if (i > 9) {
 				if (*patchApplied_shared == 1) {
-					sprintf(patchAppliedChar, "Patch was loaded to game");
-				}
-				else if (*patchApplied_shared == 2) {
-					sprintf(patchAppliedChar, "Master Write was loaded to game");
-				}
-				else sprintf(patchAppliedChar, "Plugin didn't apply patch to game");
+					sprintf(patchAppliedChar, "PluginLoadedUpdateAdvancedGuiCustomDrawerText"_tr.c_str());
+				} else if (*patchApplied_shared == 2) {
+					sprintf(patchAppliedChar, "MasterWriteLoadedUpdateAdvancedGuiCustomDrawerText"_tr.c_str());
+				} else sprintf(patchAppliedChar, "PluginNotApplyUpdateAdvancedGuiCustomDrawerText"_tr.c_str());
 				if (*API_shared == 1) {
 					if ((*Buffers_shared >= 2 && *Buffers_shared <= 4)) {
-						sprintf(&nvnBuffers[0], "Set/Active/Available buffers: %d/%d/%d", *SetActiveBuffers_shared, *ActiveBuffers_shared, *Buffers_shared);
+						sprintf(&nvnBuffers[0], "SetOrActiveOrAvailableBuffersUpdateAdvancedGuiCustomDrawerText"_tr.c_str(), *SetActiveBuffers_shared, *ActiveBuffers_shared, *Buffers_shared);
 					}
 				}
 				i = 0;
@@ -558,30 +553,32 @@ public:
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
 
-		auto *clickableListItem = new tsl::elm::ListItem("Delete settings");
-		clickableListItem->setClickListener([this](u64 keys) { 
+		auto *clickableListItem = new tsl::elm::ListItem("DeleteSettingsNoGameSubListItem"_tr);
+		clickableListItem->setClickListener([this](u64 keys) {
 			if (keys & HidNpadButton_A) {
-				char path[512] = "";
-				if (_titleid != 0x1234567890ABCDEF) {
-					sprintf(&path[0], "sdmc:/SaltySD/plugins/FPSLocker/%016lx.dat", _titleid);
-					remove(path);
-				}
-				else {
-					struct dirent *entry;
-    				DIR *dp;
-					sprintf(&path[0], "sdmc:/SaltySD/plugins/FPSLocker/");
-
-					dp = opendir(path);
-					if (!dp)
-						return true;
-					while ((entry = readdir(dp))) {
-						if (entry -> d_type != DT_DIR && std::string(entry -> d_name).find(".dat") != std::string::npos) {
-							sprintf(&path[0], "sdmc:/SaltySD/plugins/FPSLocker/%s", entry->d_name);
-							remove(path);
-						}
+				tsl::hlp::doWithSDCardHandle([this] {
+					char path[512] = "";
+					if (_titleid != 0x1234567890ABCDEF) {
+						sprintf(&path[0], "sdmc:/SaltySD/plugins/FPSLocker/%016lx.dat", _titleid);
+						remove(path);
 					}
-					closedir(dp);
-				}
+					else {
+						sprintf(&path[0], "sdmc:/SaltySD/plugins/FPSLocker/");
+
+						struct dirent *entry;
+						DIR *dp;
+						dp = opendir(path);
+						if (!dp)
+							return;
+						while ((entry = readdir(dp))) {
+							if (entry -> d_type != DT_DIR && std::string(entry -> d_name).find(".dat") != std::string::npos) {
+								sprintf(&path[0], "sdmc:/SaltySD/plugins/FPSLocker/%s", entry->d_name);
+								remove(path);
+							}
+						}
+						closedir(dp);
+					}
+				});
 				return true;
 			}
 			return false;
@@ -589,52 +586,54 @@ public:
 
 		list->addItem(clickableListItem);
 
-		auto *clickableListItem2 = new tsl::elm::ListItem("Delete patches");
-		clickableListItem2->setClickListener([this](u64 keys) { 
+		auto *clickableListItem2 = new tsl::elm::ListItem("DeletePatchesNoGameSubListItem"_tr);
+		clickableListItem2->setClickListener([this](u64 keys) {
 			if (keys & HidNpadButton_A) {
-				char folder[640] = "";
-				if (_titleid != 0x1234567890ABCDEF) {
-					sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/%016lx/", _titleid);
+				tsl::hlp::doWithSDCardHandle([this] {
+					char folder[640] = "";
+					if (_titleid != 0x1234567890ABCDEF) {
+						sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/%016lx/", _titleid);
 
-					struct dirent *entry;
-    				DIR *dp;
+						struct dirent *entry;
+						DIR *dp;
 
-					dp = opendir(folder);
-					if (!dp)
-						return true;
-					while ((entry = readdir(dp))) {
-						if (entry -> d_type != DT_DIR && std::string(entry -> d_name).find(".bin") != std::string::npos) {
-							sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/%016lx/%s", _titleid, entry -> d_name);
-							remove(folder);
-						}
-					}
-					closedir(dp);
-				}
-				else {
-					struct dirent *entry;
-					struct dirent *entry2;
-    				DIR *dp;
-					DIR *dp2;
-
-					sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/");
-					dp = opendir(folder);
-					if (!dp)
-						return true;
-					while ((entry = readdir(dp))) {
-						if (entry -> d_type != DT_DIR)
-							continue;
-						sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/%s/", entry -> d_name);
-						dp2 = opendir(folder);
-						while ((entry2 = readdir(dp2))) {
-							if (entry2 -> d_type != DT_DIR && std::string(entry2 -> d_name).find(".bin") != std::string::npos) {
-								sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/%s/%s", entry -> d_name, entry2 -> d_name);
+						dp = opendir(folder);
+						if (!dp)
+							return;
+						while ((entry = readdir(dp))) {
+							if (entry -> d_type != DT_DIR && std::string(entry -> d_name).find(".bin") != std::string::npos) {
+								sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/%016lx/%s", _titleid, entry -> d_name);
 								remove(folder);
 							}
 						}
-						closedir(dp2);
+						closedir(dp);
 					}
-					closedir(dp);
-				}
+					else {
+						struct dirent *entry;
+						struct dirent *entry2;
+						DIR *dp;
+						DIR *dp2;
+
+						sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/");
+						dp = opendir(folder);
+						if (!dp)
+							return;
+						while ((entry = readdir(dp))) {
+							if (entry -> d_type != DT_DIR)
+								continue;
+							sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/%s/", entry -> d_name);
+							dp2 = opendir(folder);
+							while ((entry2 = readdir(dp2))) {
+								if (entry2 -> d_type != DT_DIR && std::string(entry2 -> d_name).find(".bin") != std::string::npos) {
+									sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/%s/%s", entry -> d_name, entry2 -> d_name);
+									remove(folder);
+								}
+							}
+							closedir(dp2);
+						}
+						closedir(dp);
+					}
+				});
 				return true;
 			}
 			return false;
@@ -661,7 +660,7 @@ public:
 	virtual tsl::elm::Element* createUI() override {
 		// A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
 		// If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
-		auto frame = new tsl::elm::OverlayFrame("FPSLocker", APP_VERSION);
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION);
 
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
@@ -669,22 +668,22 @@ public:
 		if (oldSalty || isOLED || !SaltySD) {
 			list->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
 				if (!SaltySD) {
-					renderer->drawString("SaltyNX is not working!", false, x, y+20, 20, renderer->a(0xF33F));
+					renderer->drawString("SaltyNXNotWorkingNoGame2CustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xF33F));
 				}
 				else if (!plugin) {
-					renderer->drawString("Can't detect NX-FPS plugin on sdcard!", false, x, y+20, 20, renderer->a(0xF33F));
+					renderer->drawString("SaltyNXNotFoundNoGame2CustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xF33F));
 				}
 				else if (!check) {
-					renderer->drawString("Game is not running!", false, x, y+20, 19, renderer->a(0xF33F));
+					renderer->drawString("GameNotRunningNoGame2CustomDrawerText"_tr.c_str(), false, x, y+20, 19, renderer->a(0xF33F));
 				}
 			}), 30);
 		}
 
 		if (R_FAILED(rc)) {
 			char error[24] = "";
-			sprintf(&error[0], "Err: 0x%x", rc);
+			sprintf(&error[0], "ErrorNoGame2ListItem"_tr.c_str(), rc);
 			auto *clickableListItem2 = new tsl::elm::ListItem(error);
-			clickableListItem2->setClickListener([](u64 keys) { 
+			clickableListItem2->setClickListener([](u64 keys) {
 				if (keys & HidNpadButton_A) {
 					return true;
 				}
@@ -694,10 +693,10 @@ public:
 			list->addItem(clickableListItem2);
 		}
 		else {
-			auto *clickableListItem3 = new tsl::elm::ListItem("All");
-			clickableListItem3->setClickListener([](u64 keys) { 
+			auto *clickableListItem3 = new tsl::elm::ListItem("AllNoGame2ListItem"_tr);
+			clickableListItem3->setClickListener([](u64 keys) {
 				if (keys & HidNpadButton_A) {
-					tsl::changeTo<NoGameSub>(0x1234567890ABCDEF, "Everything");
+					tsl::changeTo<NoGameSub>(0x1234567890ABCDEF, "EverythingNoGame2ListItemText"_tr);
 					return true;
 				}
 				return false;
@@ -707,7 +706,7 @@ public:
 
 			for (size_t i = 0; i < titles.size(); i++) {
 				auto *clickableListItem = new tsl::elm::ListItem(titles[i].TitleName);
-				clickableListItem->setClickListener([i](u64 keys) { 
+				clickableListItem->setClickListener([i](u64 keys) {
 					if (keys & HidNpadButton_A) {
 						tsl::changeTo<NoGameSub>(titles[i].TitleID, titles[i].TitleName);
 						return true;
@@ -756,7 +755,7 @@ public:
 	size_t base_height = 128;
 
     virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", "Display settings");
+        auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "DisplayGuiOverlayFrameText"_tr);
 
 		auto list = new tsl::elm::List();
 
@@ -767,7 +766,7 @@ public:
 
 		if (!displaySync) {
 
-			auto *clickableListItem = new tsl::elm::ListItem("Increase Refresh Rate");
+			auto *clickableListItem = new tsl::elm::ListItem("IncreaseRefreshRateDisplayGuiListItem"_tr);
 			clickableListItem->setClickListener([this](u64 keys) { 
 				if ((keys & HidNpadButton_A) && !isDocked) {
 					if ((this -> refreshRate >= 40) && (this -> refreshRate < 60)) {
@@ -789,7 +788,7 @@ public:
 
 			list->addItem(clickableListItem);
 
-			auto *clickableListItem2 = new tsl::elm::ListItem("Decrease Refresh Rate");
+			auto *clickableListItem2 = new tsl::elm::ListItem("DecreaseRefreshRateDisplayGuiListItem"_tr);
 			clickableListItem2->setClickListener([this](u64 keys) { 
 				if ((keys & HidNpadButton_A) && !isDocked) {
 					if (this -> refreshRate > 40) {
@@ -813,8 +812,8 @@ public:
 		}
 
 		if (!oldSalty) {
-			list->addItem(new tsl::elm::CategoryHeader("Match refresh rate with FPS Target.", true));
-			auto *clickableListItem3 = new tsl::elm::ToggleListItem("Display Sync", displaySync);
+			list->addItem(new tsl::elm::CategoryHeader("MatchRefreshRateCategoryHeader"_tr, true));
+			auto *clickableListItem3 = new tsl::elm::ToggleListItem("DisplaySyncToggleListItem"_tr, displaySync);
 			clickableListItem3->setClickListener([this](u64 keys) { 
 				if (keys & HidNpadButton_A) {
 					if (R_SUCCEEDED(SaltySD_Connect())) {
@@ -854,7 +853,7 @@ public:
 
 			list->addItem(clickableListItem3);
 		}
-		
+
 		frame->setContent(list);
 
         return frame;
@@ -869,24 +868,16 @@ public:
 			isDocked = false;
 		}
 		if (!isDocked)
-			snprintf(refreshRate_c, sizeof(refreshRate_c), "LCD Refresh Rate: %d Hz", refreshRate);
-		else strncpy(refreshRate_c, "Not available in docked mode!", 30);
+			snprintf(refreshRate_c, sizeof(refreshRate_c), "LCDRefreshRateUpdateDisplayGuiCustomDrawerText"_tr.c_str(), refreshRate);
+		else strncpy(refreshRate_c, "NotAvailableInDockedModeUpdateDisplayGuiCustomDrawerText"_tr.c_str(), 30);
 	}
 };
 
 class WarningDisplayGui : public tsl::Gui {
 private:
 	uint8_t refreshRate = 0;
-	std::string Warning =	"THIS IS EXPERIMENTAL FUNCTION!\n\n"
-							"It can cause irreparable damage\n"
-							"to your display.\n\n"
-							"By pressing Accept you are taking\n"
-							"full responsibility for anything\n"
-							"that can occur because of this tool.";
-
-	std::string Docked =	"This function is not available\n"
-							"in docked mode!\n\n"
-							"Accept button is disabled.";
+	std::string Warning = "WarningWarningDisplayGuiCustomDrawerText"_tr.c_str();
+	std::string Docked = "DockedWarningDisplayGuiCustomDrawerText"_tr.c_str();
 public:
     WarningDisplayGui() {
 		apmGetPerformanceMode(&performanceMode);
@@ -901,7 +892,7 @@ public:
 	size_t base_height = 128;
 
     virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", "Display settings warning");
+        auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "DisplaySettingWarningWarningDisplayGuiOverlayFrameText"_tr);
 
 		auto list = new tsl::elm::List();
 
@@ -911,7 +902,7 @@ public:
 			else renderer->drawString(Docked.c_str(), false, x, y+20, 20, renderer->a(0xFFFF));
 		}), 200);
 
-		auto *clickableListItem1 = new tsl::elm::ListItem("Decline");
+		auto *clickableListItem1 = new tsl::elm::ListItem("DeclineWarningDisplayGuiListItem"_tr);
 		clickableListItem1->setClickListener([this](u64 keys) { 
 			if (keys & HidNpadButton_A) {
 				tsl::goBack();
@@ -922,7 +913,7 @@ public:
 
 		list->addItem(clickableListItem1);
 
-		auto *clickableListItem2 = new tsl::elm::ListItem("Accept");
+		auto *clickableListItem2 = new tsl::elm::ListItem("AcceptWarningDisplayGuiListItem"_tr);
 		clickableListItem2->setClickListener([this](u64 keys) { 
 			if ((keys & HidNpadButton_A) && !isDocked) {
 				tsl::goBack();
@@ -933,7 +924,7 @@ public:
 		});
 
 		list->addItem(clickableListItem2);
-		
+
 		frame->setContent(list);
 
         return frame;
@@ -953,24 +944,24 @@ public:
 	virtual tsl::elm::Element* createUI() override {
 		// A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
 		// If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
-		auto frame = new tsl::elm::OverlayFrame("FPSLocker", APP_VERSION);
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, APP_VERSION);
 
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
 
 		list->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
 			if (!SaltySD) {
-				renderer->drawString("SaltyNX is not working!", false, x, y+20, 20, renderer->a(0xF33F));
+				renderer->drawString("SaltyNXNotWorkingNoGameCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xF33F));
 			}
 			else if (!plugin) {
-				renderer->drawString("Can't detect NX-FPS plugin on sdcard!", false, x, y+20, 20, renderer->a(0xF33F));
+				renderer->drawString("SaltyNXNotFoundNoGameCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xF33F));
 			}
 			else if (!check) {
-				renderer->drawString("Game is not running!", false, x, y+20, 19, renderer->a(0xF33F));
+				renderer->drawString("GameNotRunningNoGameCustomDrawerText"_tr.c_str(), false, x, y+20, 19, renderer->a(0xF33F));
 			}
 		}), 30);
 
-		auto *clickableListItem2 = new tsl::elm::ListItem("Games list");
+		auto *clickableListItem2 = new tsl::elm::ListItem("GameListNoGameListItem"_tr);
 		clickableListItem2->setClickListener([this](u64 keys) { 
 			if (keys & HidNpadButton_A) {
 				tsl::changeTo<NoGame2>(this -> rc, 2, true);
@@ -981,7 +972,7 @@ public:
 
 		list->addItem(clickableListItem2);
 
-		auto *clickableListItem3 = new tsl::elm::ListItem("Display settings", "\uE151");
+		auto *clickableListItem3 = new tsl::elm::ListItem("DisplaySettingsNoGameListItem"_tr, "\uE151");
 		clickableListItem3->setClickListener([](u64 keys) { 
 			if (keys & HidNpadButton_A) {
 				tsl::changeTo<WarningDisplayGui>();
@@ -1015,36 +1006,36 @@ public:
 	virtual tsl::elm::Element* createUI() override {
 		// A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
 		// If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
-		auto frame = new tsl::elm::OverlayFrame("FPSLocker", APP_VERSION);
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION);
 
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
 		
 		list->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
 			if (!SaltySD) {
-				renderer->drawString("SaltyNX is not working!", false, x, y+50, 20, renderer->a(0xF33F));
+				renderer->drawString("SaltNXNotWorkingGuiTestCustomDrawerText"_tr.c_str(), false, x, y+50, 20, renderer->a(0xF33F));
 			}
 			else if (!plugin) {
-				renderer->drawString("Can't detect NX-FPS plugin on sdcard!", false, x, y+50, 20, renderer->a(0xF33F));
+				renderer->drawString("SaltNXNotFoundGuiTestCustomDrawerText"_tr.c_str(), false, x, y+50, 20, renderer->a(0xF33F));
 			}
 			else if (!check) {
 				if (closed) {
-					renderer->drawString("Game was closed! Overlay disabled!", false, x, y+20, 19, renderer->a(0xF33F));
+					renderer->drawString("GameClosedGuiTestCustomDrawerText"_tr.c_str(), false, x, y+20, 19, renderer->a(0xF33F));
 				}
 				else {
-					renderer->drawString("Game is not running! Overlay disabled!", false, x, y+20, 19, renderer->a(0xF33F));
+					renderer->drawString("GameNotRunningGuiTestCustomDrawerText"_tr.c_str(), false, x, y+20, 19, renderer->a(0xF33F));
 				}
 			}
 			else if (!PluginRunning) {
-				renderer->drawString("Game is running.", false, x, y+20, 20, renderer->a(0xFFFF));
-				renderer->drawString("NX-FPS is not running!", false, x, y+40, 20, renderer->a(0xF33F));
+				renderer->drawString("GameRunningGuiTestCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xFFFF));
+				renderer->drawString("NXFPSNotRunningGuiTestCustomDrawerText"_tr.c_str(), false, x, y+40, 20, renderer->a(0xF33F));
 			}
 			else if (!*pluginActive) {
-				renderer->drawString("NX-FPS is running, but no frame was processed.", false, x, y+20, 20, renderer->a(0xF33F));
-				renderer->drawString("Restart overlay to check again.", false, x, y+50, 20, renderer->a(0xFFFF));
+				renderer->drawString("NXFPSRunningNoFrameProcessedGuiTestCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xF33F));
+				renderer->drawString("RestartOverlayToCheckGuiTestCustomDrawerText"_tr.c_str(), false, x, y+50, 20, renderer->a(0xFFFF));
 			}
 			else {
-				renderer->drawString("NX-FPS is running.", false, x, y+20, 20, renderer->a(0xFFFF));
+				renderer->drawString("NXFPSRunningGuiTestCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xFFFF));
 				if ((*API_shared > 0) && (*API_shared <= 2))
 					renderer->drawString(FPSMode_c, false, x, y+40, 20, renderer->a(0xFFFF));
 				renderer->drawString(FPSTarget_c, false, x, y+60, 20, renderer->a(0xFFFF));
@@ -1053,8 +1044,8 @@ public:
 		}), 90);
 
 		if (PluginRunning && *pluginActive) {
-			auto *clickableListItem = new tsl::elm::ListItem("Increase FPS target");
-			clickableListItem->setClickListener([](u64 keys) { 
+			auto *clickableListItem = new tsl::elm::ListItem("IncreaseFPSGuiTestListItem"_tr);
+			clickableListItem->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
 					if (*FPSmode_shared == 2 && !*FPSlocked_shared) {
 						*FPSlocked_shared = 35;
@@ -1086,8 +1077,8 @@ public:
 
 			list->addItem(clickableListItem);
 			
-			auto *clickableListItem2 = new tsl::elm::ListItem("Decrease FPS target");
-			clickableListItem2->setClickListener([](u64 keys) { 
+			auto *clickableListItem2 = new tsl::elm::ListItem("DecreaseFPSGuiTestListItem"_tr);
+			clickableListItem2->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
 					if (*FPSmode_shared < 2 && !*FPSlocked_shared) {
 						*FPSlocked_shared = 55;
@@ -1118,8 +1109,8 @@ public:
 			});
 			list->addItem(clickableListItem2);
 
-			auto *clickableListItem4 = new tsl::elm::ListItem("Disable custom FPS target");
-			clickableListItem4->setClickListener([](u64 keys) { 
+			auto *clickableListItem4 = new tsl::elm::ListItem("DisableFPSGuiTestListItem"_tr);
+			clickableListItem4->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
 					if (*FPSlocked_shared) {
 						*FPSlocked_shared = 0;
@@ -1137,8 +1128,8 @@ public:
 			});
 			list->addItem(clickableListItem4);
 
-			auto *clickableListItem3 = new tsl::elm::ListItem("Advanced settings");
-			clickableListItem3->setClickListener([](u64 keys) { 
+			auto *clickableListItem3 = new tsl::elm::ListItem("AdvancedSettingsGuiTestListItem"_tr);
+			clickableListItem3->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
 					tsl::changeTo<AdvancedGui>();
 					return true;
@@ -1147,36 +1138,38 @@ public:
 			});
 			list->addItem(clickableListItem3);
 
-			auto *clickableListItem5 = new tsl::elm::ListItem("Save settings");
-			clickableListItem5->setClickListener([](u64 keys) { 
+			auto *clickableListItem5 = new tsl::elm::ListItem("SaveSettingsGuiTestListItem"_tr);
+			clickableListItem5->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
-					if (!*FPSlocked_shared && !*ZeroSync_shared && !SetBuffers_save) {
-						remove(savePath);
-					}
-					else {
-						DIR* dir = opendir("sdmc:/SaltySD/plugins/");
-						if (!dir) {
-							mkdir("sdmc:/SaltySD/plugins/", 777);
+					tsl::hlp::doWithSDCardHandle([] {
+						if (!*FPSlocked_shared && !*ZeroSync_shared && !SetBuffers_save) {
+							remove(savePath);
 						}
-						else closedir(dir);
-						dir = opendir("sdmc:/SaltySD/plugins/FPSLocker/");
-						if (!dir) {
-							mkdir("sdmc:/SaltySD/plugins/FPSLocker/", 777);
-						}
-						else closedir(dir);
-						FILE* file = fopen(savePath, "wb");
-						if (file) {
-							fwrite(FPSlocked_shared, 1, 1, file);
-							if (SetBuffers_save > 2 || (!SetBuffers_save && *Buffers_shared > 2)) {
-								*ZeroSync_shared = 0;
+						else {
+							DIR* dir = opendir("sdmc:/SaltySD/plugins/");
+							if (!dir) {
+								mkdir("sdmc:/SaltySD/plugins/", 777);
 							}
-							fwrite(ZeroSync_shared, 1, 1, file);
-							if (SetBuffers_save) {
-								fwrite(&SetBuffers_save, 1, 1, file);
+							else closedir(dir);
+							dir = opendir("sdmc:/SaltySD/plugins/FPSLocker/");
+							if (!dir) {
+								mkdir("sdmc:/SaltySD/plugins/FPSLocker/", 777);
 							}
-							fclose(file);
+							else closedir(dir);
+							FILE* file = fopen(savePath, "wb");
+							if (file) {
+								fwrite(FPSlocked_shared, 1, 1, file);
+								if (SetBuffers_save > 2 || (!SetBuffers_save && *Buffers_shared > 2)) {
+									*ZeroSync_shared = 0;
+								}
+								fwrite(ZeroSync_shared, 1, 1, file);
+								if (SetBuffers_save) {
+									fwrite(&SetBuffers_save, 1, 1, file);
+								}
+								fclose(file);
+							}
 						}
-					}
+					});
 					return true;
 				}
 				return false;
@@ -1185,7 +1178,7 @@ public:
 		}
 
 		if (!isOLED && SaltySD) {
-			auto *clickableListItem6 = new tsl::elm::ListItem("Display settings", "\uE151");
+			auto *clickableListItem6 = new tsl::elm::ListItem("DisplaySettingsGuiTestListItem"_tr, "\uE151");
 			clickableListItem6->setClickListener([](u64 keys) { 
 				if (keys & HidNpadButton_A) {
 					tsl::changeTo<WarningDisplayGui>();
@@ -1220,18 +1213,18 @@ public:
 				switch (*FPSmode_shared) {
 					case 0:
 						//This is usually a sign that game doesn't use interval
-						sprintf(FPSMode_c, "Interval Mode: 0 (Unused)");
+						sprintf(FPSMode_c, "IntervalModeUnusedUpdateGuiTestListItem"_tr.c_str());
 						break;
 					case 1 ... 5:
-						sprintf(FPSMode_c, "Interval Mode: %d (%d FPS)", *FPSmode_shared, refreshRate_g / *FPSmode_shared);
+						sprintf(FPSMode_c, "IntervalModeFPSUpdateGuiTestListItem"_tr.c_str(), *FPSmode_shared, refreshRate_g / *FPSmode_shared);
 						break;
 					default:
-						sprintf(FPSMode_c, "Interval Mode: %d (Wrong)", *FPSmode_shared);
+						sprintf(FPSMode_c, "IntervalModeWrongUpdateGuiTestListItem"_tr.c_str(), *FPSmode_shared);
 				}
 				if (!*FPSlocked_shared) {
-					sprintf(FPSTarget_c, "Custom FPS Target: Disabled");
+					sprintf(FPSTarget_c, "CustomFPSDisabledUpdateGuiTestListItem"_tr.c_str());
 				}
-				else sprintf(FPSTarget_c, "Custom FPS Target: %d", *FPSlocked_shared);
+				else sprintf(FPSTarget_c, "CustomFPSUpdateGuiTestListItem"_tr.c_str(), *FPSlocked_shared);
 				sprintf(PFPS_c, "%d", *FPS_shared);
 				i = 0;
 			}
@@ -1249,9 +1242,108 @@ class OverlayTest : public tsl::Overlay {
 public:
 	// libtesla already initialized fs, hid, pl, pmdmnt, hid:sys and set:sys
 	virtual void initServices() override {
+		std::string jsonStr = R"(
+			{
+				"PluginName": "FPSLocker",
+				"NVNSetBufferingSetBuffersOverlayFrame": "NVN Set Buffering",
+				"AppliedNextGameBootSetBuffersListItemCategoryHeader": "It will be applied on next game boot.",
+				"RememberSaveSettingsSetBuffersListItemCategoryHeader": "Remember to save settings after change.",
+				"DoubleSetBuffersListItem": "Double",
+				"TripleForceSetBuffersListItem": "Triple [force]",
+				"TripleSetBuffersListItem": "Triple",
+				"QuadrupleForceSetBuffersListItem": "Quadruple [force]",
+				"QuadrupleSetBuffersListItem": "Quadruple",
+				"NVNWindowSyncWaitSyncModeOverlayFrame": "NVN Window Sync Wait",
+				"SyncModeSyncModeOverlayFrameSubtitle": "Mode",
+				"EnabledSyncModeSyncModeListItem": "Enabled",
+				"OnSyncModeAdvancedGuiListItemText": "On",
+				"SemiEnabledSyncModeSyncModeListItem": "Semi-Enabled",
+				"SemiSyncModeAdvancedGuiListItemText": "Semi",
+				"DisabledSyncModeSyncModeListItem": "Disabled",
+				"OffSyncModeAdvancedGuiListItemText": "Off",
+				"ConfigFileNotFoundAdvancedGuiCustomDrawerText": "Game config file not found\nTID: %016lX\nBID: %016lX",
+				"ConfigErrorAdvancedGuiCustomDrawerText": "Game config error: 0x%X",
+				"PatchFileNotExistAdvancedGuiCustomDrawerText": "Patch file doesn't exist.",
+				"NewConfigDownloadSuccessAdvancedGuiCustomDrawerText": "New config downloaded successfully.",
+				"PatchFileExistAdvancedGuiCustomDrawerText": "Patch file exists.",
+				"AdvancedSettingsAdvancedGuiOverlayFrameSubTitle": "Advanced settings",
+				"ConfigFileValidAdvancedGuiCustomDrawerText": "Found valid config file!",
+				"NVNAdvancedGuiCategoryHeader": "NVN",
+				"SyncWaitAdvancedGuiListItem": "Window Sync Wait",
+				"SetBufferingAdvancedGuiListItem": "Set Buffering",
+				"EGLAdvancedGuiCategoryHeader": "EGL",
+				"VulkanAdvancedGuiCategoryHeader": "Vulkan",
+				"PatchWillBeAppliedNextGameBootAdvancedGuiCategoryHeader": "It will be applied on next game boot",
+				"ConvertConfigToPatchFileAdvancedGuiListItem": "Convert config to patch file",
+				"PatchFileCreatedSuccessAdvancedGuiListItemText": "Patch file created successfully.",
+				"PatchFileCreateFailedAdvancedGuiListItemText": "Error while creating patch: 0x%x",
+				"DeletePatchFileAdvancedGuiListItem": "Delete patch file",
+				"DeletePatchSuccessfulFileAdvancedGuiListItemText": "Patch file deleted successfully.",
+				"RemoveExistPatchFileAdvancedGuiListItemText": "If exists, it will also remove existing patch file.",
+				"CheckOrDownloadConfigFileAdvancedGuiListItemText": "Check/download config file",
+				"PatchNotAvailableAdvancedGuiListItemText": "Patch is not available! RC: 0x%x",
+				"PatchNotAvailable404AdvancedGuiListItemText": "Patch is not available! Err 404",
+				"NoNewConfigAvailableAdvancedGuiListItemText": "No new config available.",
+				"InternetConnectionNotAvailableAdvancedGuiListItemText": "Internet connection not available!",
+				"PatchDownloadFailedAdvancedGuiListItemText": "Patch downloading failed! RC: 0x%x",
+				"PluginLoadedUpdateAdvancedGuiCustomDrawerText": "Patch was loaded to game",
+				"MasterWriteLoadedUpdateAdvancedGuiCustomDrawerText": "Master Write was loaded to game",
+				"PluginNotApplyUpdateAdvancedGuiCustomDrawerText": "Plugin didn't apply patch to game",
+				"SetOrActiveOrAvailableBuffersUpdateAdvancedGuiCustomDrawerText": "Set/Active/Available buffers: %d/%d/%d",
+				"DeleteSettingsNoGameSubListItem": "Delete settings",
+				"DeletePatchesNoGameSubListItem": "Delete patches",
+				"SaltyNXNotWorkingNoGame2CustomDrawerText": "SaltyNX is not working!",
+				"SaltyNXNotFoundNoGame2CustomDrawerText": "Can't detect NX-FPS plugin on sdcard!",
+				"GameNotRunningNoGame2CustomDrawerText": "Game is not running!",
+				"ErrorNoGame2ListItem": "Err: 0x%x",
+				"AllNoGame2ListItem": "All",
+				"EverythingNoGame2ListItemText": "Everything",
+				"DisplayGuiOverlayFrameText": "Display settings",
+				"IncreaseRefreshRateDisplayGuiListItem": "Increase Refresh Rate",
+				"DecreaseRefreshRateDisplayGuiListItem": "Decrease Refresh Rate",
+				"MatchRefreshRateCategoryHeader": "Match refresh rate with FPS Target.",
+				"DisplaySyncToggleListItem": "Display Sync",
+				"LCDRefreshRateUpdateDisplayGuiCustomDrawerText": "LCD Refresh Rate: %d Hz",
+				"NotAvailableInDockedModeUpdateDisplayGuiCustomDrawerText": "Not available in docked mode!",
+				"WarningWarningDisplayGuiCustomDrawerText": "THIS IS EXPERIMENTAL FUNCTION!\n\nIt can cause irreparable damage\nto your display.\n\nBy pressing Accept you are taking\nfull responsibility for anything\nthat can occur because of this tool.",
+				"DockedWarningDisplayGuiCustomDrawerText": "This function is not available\nin docked mode!\n\nAccept button is disabled.",
+				"DisplaySettingWarningWarningDisplayGuiOverlayFrameText": "Display settings warning",
+				"DeclineWarningDisplayGuiListItem": "Decline",
+				"AcceptWarningDisplayGuiListItem": "Accept",
+				"SaltyNXNotWorkingNoGameCustomDrawerText": "SaltyNX is not working!",
+				"SaltyNXNotFoundNoGameCustomDrawerText": "Can't detect NX-FPS plugin on sdcard!",
+				"GameNotRunningNoGameCustomDrawerText": "Game is not running!",
+				"GameListNoGameListItem": "Games list",
+				"DisplaySettingsNoGameListItem": "Display settings",
+				"SaltNXNotWorkingGuiTestCustomDrawerText": "SaltyNX is not working!",
+				"SaltNXNotFoundGuiTestCustomDrawerText": "Can't detect NX-FPS plugin on sdcard!",
+				"GameClosedGuiTestCustomDrawerText": "Game was closed! Overlay disabled!",
+				"GameNotRunningGuiTestCustomDrawerText": "Game is not running! Overlay disabled!",
+				"GameRunningGuiTestCustomDrawerText": "Game is running.",
+				"NXFPSNotRunningGuiTestCustomDrawerText": "NX-FPS is not running!",
+				"NXFPSRunningNoFrameProcessedGuiTestCustomDrawerText": "NX-FPS is running, but no frame was processed.",
+				"RestartOverlayToCheckGuiTestCustomDrawerText": "Restart overlay to check again.",
+				"NXFPSRunningGuiTestCustomDrawerText": "NX-FPS is running.",
+				"IncreaseFPSGuiTestListItem": "Increase FPS target",
+				"DecreaseFPSGuiTestListItem": "Decrease FPS target",
+				"DisableFPSGuiTestListItem": "Disable custom FPS target",
+				"AdvancedSettingsGuiTestListItem": "Advanced settings",
+				"SaveSettingsGuiTestListItem": "Save settings",
+				"DisplaySettingsGuiTestListItem": "Display settings",
+				"IntervalModeUnusedUpdateGuiTestListItem": "Interval Mode: 0 [Unused]",
+				"IntervalModeFPSUpdateGuiTestListItem": "Interval Mode: %d [%d FPS]",
+				"IntervalModeWrongUpdateGuiTestListItem": "Interval Mode: %d [Wrong]",
+				"CustomFPSDisabledUpdateGuiTestListItem": "Custom FPS Target: Disabled",
+				"CustomFPSUpdateGuiTestListItem": "Custom FPS Target: %d"
+			}
+		)";
+		std::string lanPath = std::string("sdmc:/switch/.overlays/lang/") + APPTITLE + "/";
+		fsdevMountSdmc();
+		tsl::hlp::doWithSmSession([&lanPath, &jsonStr]{
+			tsl::tr::InitTrans(lanPath, jsonStr);
+		});
 
 		tsl::hlp::doWithSmSession([]{
-			
 			apmInitialize();
 			setsysInitialize();
 			SetSysProductModel model;
@@ -1261,13 +1353,12 @@ public:
 					remove("sdmc:/SaltySD/flags/displaysync.flag");
 				}
 			}
-			setsysExit();
-			fsdevMountSdmc();
 			FILE* file = fopen("sdmc:/SaltySD/flags/displaysync.flag", "rb");
 			if (file) {
 				displaySync = true;
 				fclose(file);
 			}
+			setsysExit();
 			SaltySD = CheckPort();
 			if (!SaltySD) return;
 
@@ -1284,7 +1375,7 @@ public:
 			check = true;
 			
 			if(!LoadSharedMemory()) return;
-			
+
 			uintptr_t base = (uintptr_t)shmemGetAddr(&_sharedmemory);
 			ptrdiff_t rel_offset = searchSharedMemoryBlock(base);
 			if (rel_offset > -1)
