@@ -278,7 +278,7 @@ public:
 	}
 
     virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "DockedDisplayAdditionalSettingsDockedManualGuiOverlayFrame"_tr);
+        auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "DockedDisplayAdditionalSettingsDockedAdditionalGuiOverlayFrame"_tr);
 
 		auto list = new tsl::elm::List();
 
