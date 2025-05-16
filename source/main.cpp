@@ -10,6 +10,8 @@
 #include "Utils.hpp"
 #include <cstdlib>
 
+using namespace tsl;
+
 bool displaySync = false;
 bool isOLED = false;
 bool isLite = false;
@@ -40,8 +42,8 @@ public:
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
 
-		auto *clickableListItem = new tsl::elm::ListItem2("Delete settings");
-		clickableListItem->setClickListener([this](u64 keys) { 
+		auto *clickableListItem = new tsl::elm::ListItem2("DeleteSettingsNoGameSubListItem"_tr);
+		clickableListItem->setClickListener([this](u64 keys) {
 			if (keys & HidNpadButton_A) {
 				char path[512] = "";
 				if (_titleid != 0x1234567890ABCDEF) {
@@ -50,7 +52,7 @@ public:
 				}
 				else {
 					struct dirent *entry;
-    				DIR *dp;
+					DIR *dp;
 					sprintf(&path[0], "sdmc:/SaltySD/plugins/FPSLocker/");
 
 					dp = opendir(path);
@@ -71,15 +73,15 @@ public:
 
 		list->addItem(clickableListItem);
 
-		auto *clickableListItem2 = new tsl::elm::ListItem2("Delete patches");
-		clickableListItem2->setClickListener([this](u64 keys) { 
+		auto *clickableListItem2 = new tsl::elm::ListItem2("DeletePatchesNoGameSubListItem"_tr);
+		clickableListItem2->setClickListener([this](u64 keys) {
 			if (keys & HidNpadButton_A) {
 				char folder[640] = "";
 				if (_titleid != 0x1234567890ABCDEF) {
 					sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/%016lx/", _titleid);
 
 					struct dirent *entry;
-    				DIR *dp;
+					DIR *dp;
 
 					dp = opendir(folder);
 					if (!dp)
@@ -95,7 +97,7 @@ public:
 				else {
 					struct dirent *entry;
 					struct dirent *entry2;
-    				DIR *dp;
+					DIR *dp;
 					DIR *dp2;
 
 					sprintf(&folder[0], "sdmc:/SaltySD/plugins/FPSLocker/patches/");
@@ -143,7 +145,7 @@ public:
 	virtual tsl::elm::Element* createUI() override {
 		// A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
 		// If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
-		auto frame = new tsl::elm::OverlayFrame("FPSLocker", APP_VERSION);
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION);
 
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
@@ -151,22 +153,22 @@ public:
 		if (oldSalty || !SaltySD) {
 			list->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
 				if (!SaltySD) {
-					renderer->drawString("SaltyNX is not working!", false, x, y+20, 20, renderer->a(0xF33F));
+					renderer->drawString("SaltyNXNotWorkingNoGame2CustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xF33F));
 				}
 				else if (!plugin) {
-					renderer->drawString("Can't detect NX-FPS plugin on sdcard!", false, x, y+20, 20, renderer->a(0xF33F));
+					renderer->drawString("SaltyNXNotFoundNoGame2CustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xF33F));
 				}
 				else if (!check) {
-					renderer->drawString("Game is not running!", false, x, y+20, 19, renderer->a(0xF33F));
+					renderer->drawString("GameNotRunningNoGame2CustomDrawerText"_tr.c_str(), false, x, y+20, 19, renderer->a(0xF33F));
 				}
 			}), 30);
 		}
 
 		if (R_FAILED(rc)) {
 			char error[24] = "";
-			sprintf(&error[0], "Err: 0x%x", rc);
+			sprintf(&error[0], "ErrorNoGame2ListItem"_tr.c_str(), rc);
 			auto *clickableListItem2 = new tsl::elm::ListItem2(error);
-			clickableListItem2->setClickListener([](u64 keys) { 
+			clickableListItem2->setClickListener([](u64 keys) {
 				if (keys & HidNpadButton_A) {
 					return true;
 				}
@@ -176,10 +178,10 @@ public:
 			list->addItem(clickableListItem2);
 		}
 		else {
-			auto *clickableListItem3 = new tsl::elm::ListItem2("All");
-			clickableListItem3->setClickListener([](u64 keys) { 
+			auto *clickableListItem3 = new tsl::elm::ListItem2("AllNoGame2ListItem"_tr);
+			clickableListItem3->setClickListener([](u64 keys) {
 				if (keys & HidNpadButton_A) {
-					tsl::changeTo<NoGameSub>(0x1234567890ABCDEF, "Everything");
+					tsl::changeTo<NoGameSub>(0x1234567890ABCDEF, "EverythingNoGame2ListItemText"_tr);
 					return true;
 				}
 				return false;
@@ -189,7 +191,7 @@ public:
 
 			for (size_t i = 0; i < titles.size(); i++) {
 				auto *clickableListItem = new tsl::elm::ListItem2(titles[i].TitleName);
-				clickableListItem->setClickListener([i](u64 keys) { 
+				clickableListItem->setClickListener([i](u64 keys) {
 					if (keys & HidNpadButton_A) {
 						tsl::changeTo<NoGameSub>(titles[i].TitleID, titles[i].TitleName);
 						return true;
@@ -222,24 +224,24 @@ public:
 	virtual tsl::elm::Element* createUI() override {
 		// A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
 		// If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
-		auto frame = new tsl::elm::OverlayFrame("FPSLocker", APP_VERSION);
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION);
 
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
 
 		list->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
 			if (!SaltySD) {
-				renderer->drawString("SaltyNX is not working!", false, x, y+20, 20, renderer->a(0xF33F));
+				renderer->drawString("SaltyNXNotWorkingNoGameCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xF33F));
 			}
 			else if (!plugin) {
-				renderer->drawString("Can't detect NX-FPS plugin on sdcard!", false, x, y+20, 20, renderer->a(0xF33F));
+				renderer->drawString("SaltyNXNotFoundNoGameCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xF33F));
 			}
 			else if (!check) {
-				renderer->drawString("Game is not running!", false, x, y+20, 19, renderer->a(0xF33F));
+				renderer->drawString("GameNotRunningNoGameCustomDrawerText"_tr.c_str(), false, x, y+20, 19, renderer->a(0xF33F));
 			}
 		}), 30);
 
-		auto *clickableListItem2 = new tsl::elm::ListItem2("Games list");
+		auto *clickableListItem2 = new tsl::elm::ListItem2("GameListNoGameListItem"_tr);
 		clickableListItem2->setClickListener([this](u64 keys) { 
 			if (keys & HidNpadButton_A) {
 				tsl::changeTo<NoGame2>(this -> rc, 2, true);
@@ -250,7 +252,7 @@ public:
 
 		list->addItem(clickableListItem2);
 
-		auto *clickableListItem3 = new tsl::elm::ListItem2("Display settings", "\uE151");
+		auto *clickableListItem3 = new tsl::elm::ListItem2("DisplaySettingsNoGameListItem"_tr, "\uE151");
 		clickableListItem3->setClickListener([](u64 keys) { 
 			if (keys & HidNpadButton_A) {
 				tsl::changeTo<WarningDisplayGui>();
@@ -307,7 +309,7 @@ public:
 	virtual tsl::elm::Element* createUI() override {
 		// A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
 		// If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
-		auto frame = new tsl::elm::OverlayFrame("FPSLocker", "Change FPS Target");
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "ChangeFPSTargetDockedFPSTargetGuiOverlayFrame"_tr);
 
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
@@ -439,7 +441,7 @@ class GuiTest : public tsl::Gui {
 public:
 	ApmPerformanceMode entry_mode = ApmPerformanceMode_Invalid;
 	GuiTest(u8 arg1, u8 arg2, bool arg3) { 
-		
+
 		if (isLite) entry_mode = ApmPerformanceMode_Normal;
 		else {
 			smInitialize();
@@ -457,36 +459,36 @@ public:
 	virtual tsl::elm::Element* createUI() override {
 		// A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
 		// If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
-		auto frame = new tsl::elm::OverlayFrame("FPSLocker", APP_VERSION);
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION);
 
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
 		
 		list->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
 			if (!SaltySD) {
-				renderer->drawString("SaltyNX is not working!", false, x, y+50, 20, renderer->a(0xF33F));
+				renderer->drawString("SaltNXNotWorkingGuiTestCustomDrawerText"_tr.c_str(), false, x, y+50, 20, renderer->a(0xF33F));
 			}
 			else if (!plugin) {
-				renderer->drawString("Can't detect NX-FPS plugin on sdcard!", false, x, y+50, 20, renderer->a(0xF33F));
+				renderer->drawString("SaltNXNotFoundGuiTestCustomDrawerText"_tr.c_str(), false, x, y+50, 20, renderer->a(0xF33F));
 			}
 			else if (!check) {
 				if (closed) {
-					renderer->drawString("Game was closed! Overlay disabled!", false, x, y+20, 19, renderer->a(0xF33F));
+					renderer->drawString("GameClosedGuiTestCustomDrawerText"_tr.c_str(), false, x, y+20, 19, renderer->a(0xF33F));
 				}
 				else {
-					renderer->drawString("Game is not running! Overlay disabled!", false, x, y+20, 19, renderer->a(0xF33F));
+					renderer->drawString("GameNotRunningGuiTestCustomDrawerText"_tr.c_str(), false, x, y+20, 19, renderer->a(0xF33F));
 				}
 			}
 			else if (!PluginRunning) {
-				renderer->drawString("Game is running.", false, x, y+20, 20, renderer->a(0xFFFF));
-				renderer->drawString("NX-FPS is not running!", false, x, y+40, 20, renderer->a(0xF33F));
+				renderer->drawString("GameRunningGuiTestCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xFFFF));
+				renderer->drawString("NXFPSNotRunningGuiTestCustomDrawerText"_tr.c_str(), false, x, y+40, 20, renderer->a(0xF33F));
 			}
 			else if (!(Shared -> pluginActive)) {
-				renderer->drawString("NX-FPS is running, but no frame was processed.", false, x, y+20, 20, renderer->a(0xF33F));
-				renderer->drawString("Restart overlay to check again.", false, x, y+50, 20, renderer->a(0xFFFF));
+				renderer->drawString("NXFPSRunningNoFrameProcessedGuiTestCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xF33F));
+				renderer->drawString("RestartOverlayToCheckGuiTestCustomDrawerText"_tr.c_str(), false, x, y+50, 20, renderer->a(0xFFFF));
 			}
 			else {
-				renderer->drawString("NX-FPS is running.", false, x, y+20, 20, renderer->a(0xFFFF));
+				renderer->drawString("NXFPSRunningGuiTestCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xFFFF));
 				if (((Shared -> API) > 0) && ((Shared -> API) <= 2))
 					renderer->drawString(FPSMode_c, false, x, y+40, 20, renderer->a(0xFFFF));
 				renderer->drawString(FPSTarget_c, false, x, y+60, 20, renderer->a(0xFFFF));
@@ -497,7 +499,7 @@ public:
 
 		if (PluginRunning && (Shared -> pluginActive)) {
 			if (entry_mode == ApmPerformanceMode_Normal) {
-				auto *clickableListItem = new tsl::elm::ListItem2("Increase FPS target");
+				auto *clickableListItem = new tsl::elm::ListItem2("IncreaseFPSGuiTestListItem"_tr);
 				clickableListItem->setClickListener([](u64 keys) { 
 					if ((keys & HidNpadButton_A) && PluginRunning) {
 						if ((Shared -> FPSmode) == 2 && !(Shared -> FPSlocked)) {
@@ -545,8 +547,8 @@ public:
 				});
 
 				list->addItem(clickableListItem);
-				
-				auto *clickableListItem2 = new tsl::elm::ListItem2("Decrease FPS target");
+
+				auto *clickableListItem2 = new tsl::elm::ListItem2("DecreaseFPSGuiTestListItem"_tr);
 				clickableListItem2->setClickListener([](u64 keys) { 
 					if ((keys & HidNpadButton_A) && PluginRunning) {
 						if ((Shared -> FPSmode) < 2 && !(Shared -> FPSlocked)) {
@@ -595,7 +597,7 @@ public:
 				list->addItem(clickableListItem2);
 			}
 			else if (entry_mode == ApmPerformanceMode_Boost) {
-				auto *clickableListItem2 = new tsl::elm::ListItem2("Change FPS target");
+				auto *clickableListItem2 = new tsl::elm::ListItem2("ChangeFPSGuiTestListItem"_tr);
 				clickableListItem2->setClickListener([](u64 keys) { 
 					if ((keys & HidNpadButton_A) && PluginRunning) {
 						tsl::changeTo<DockedFPSTargetGui>();
@@ -606,8 +608,8 @@ public:
 				list->addItem(clickableListItem2);			
 			}
 
-			auto *clickableListItem4 = new tsl::elm::ListItem2("Disable custom FPS target");
-			clickableListItem4->setClickListener([](u64 keys) { 
+			auto *clickableListItem4 = new tsl::elm::ListItem2("DisableFPSGuiTestListItem"_tr);
+			clickableListItem4->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
 					if ((Shared -> FPSlocked)) {
 						(Shared -> FPSlocked) = 0;
@@ -625,8 +627,8 @@ public:
 			});
 			list->addItem(clickableListItem4);
 
-			auto *clickableListItem3 = new tsl::elm::ListItem2("Advanced settings");
-			clickableListItem3->setClickListener([](u64 keys) { 
+			auto *clickableListItem3 = new tsl::elm::ListItem2("AdvancedSettingsGuiTestListItem"_tr);
+			clickableListItem3->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
 					tsl::changeTo<AdvancedGui>();
 					return true;
@@ -635,8 +637,8 @@ public:
 			});
 			list->addItem(clickableListItem3);
 
-			auto *clickableListItem5 = new tsl::elm::ListItem2("Save settings");
-			clickableListItem5->setClickListener([](u64 keys) { 
+			auto *clickableListItem5 = new tsl::elm::ListItem2("SaveSettingsGuiTestListItem"_tr);
+			clickableListItem5->setClickListener([](u64 keys) {
 				if ((keys & HidNpadButton_A) && PluginRunning) {
 					if (!(Shared -> FPSlocked) && !(Shared -> ZeroSync) && !SetBuffers_save) {
 						remove(savePath);
@@ -673,7 +675,7 @@ public:
 		}
 
 		if (SaltySD) {
-			auto *clickableListItem6 = new tsl::elm::ListItem2("Display settings", "\uE151");
+			auto *clickableListItem6 = new tsl::elm::ListItem2("DisplaySettingsGuiTestListItem"_tr, "\uE151");
 			clickableListItem6->setClickListener([](u64 keys) { 
 				if (keys & HidNpadButton_A) {
 					tsl::changeTo<WarningDisplayGui>();
@@ -700,21 +702,21 @@ public:
 				switch ((Shared -> FPSmode)) {
 					case 0:
 						//This is usually a sign that game doesn't use interval
-						sprintf(FPSMode_c, "Interval Mode: 0 (Unused)");
+						sprintf(FPSMode_c, "IntervalModeUnusedUpdateGuiTestListItem"_tr.c_str());
 						break;
 					case 1 ... 5:
 						if (std::fmod((double)refreshRate_g, (double)(Shared -> FPSmode)) != 0.0) {
 							sprintf(FPSMode_c, "Interval Mode: %d (%.1f FPS)", (Shared -> FPSmode), (double)refreshRate_g / (Shared -> FPSmode));
 						}
-						else sprintf(FPSMode_c, "Interval Mode: %d (%d FPS)", (Shared -> FPSmode), refreshRate_g / (Shared -> FPSmode));
+						else sprintf(FPSMode_c, "IntervalModeFPSUpdateGuiTestListItem"_tr.c_str(), (Shared -> FPSmode), refreshRate_g / (Shared -> FPSmode));
 						break;
 					default:
-						sprintf(FPSMode_c, "Interval Mode: %d (Wrong)", (Shared -> FPSmode));
+						sprintf(FPSMode_c, "IntervalModeWrongUpdateGuiTestListItem"_tr.c_str(), (Shared -> FPSmode));
 				}
 				if (!(Shared -> FPSlocked)) {
-					sprintf(FPSTarget_c, "Custom FPS Target: Disabled");
+					sprintf(FPSTarget_c, "CustomFPSDisabledUpdateGuiTestListItem"_tr.c_str());
 				}
-				else sprintf(FPSTarget_c, "Custom FPS Target: %d", (Shared -> FPSlocked));
+				else sprintf(FPSTarget_c, "CustomFPSUpdateGuiTestListItem"_tr.c_str(), (Shared -> FPSlocked));
 				sprintf(PFPS_c, "%d", (Shared -> FPS));
 				i = 0;
 			}
@@ -756,7 +758,7 @@ public:
 	// Called when this Gui gets loaded to create the UI
 	// Allocate all elements on the heap. libtesla will make sure to clean them up when not needed anymore
 	virtual tsl::elm::Element* createUI() override {
-		auto frame = new tsl::elm::OverlayFrame("FPSLocker", APP_VERSION);
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION);
 		return frame;
 	}
 
@@ -771,9 +773,150 @@ class OverlayTest : public tsl::Overlay {
 public:
 	// libtesla already initialized fs, hid, pl, pmdmnt, hid:sys and set:sys
 	virtual void initServices() override {
+		std::string jsonStr = R"(
+			{
+				"PluginName": "FPSLocker",
+				"SetBufferingSetBuffersOverlayFrame": "Set Buffering",
+				"AppliedNextGameBootSetBuffersListItemCategoryHeader": "It will be applied on next game boot.",
+				"RememberSaveSettingsSetBuffersListItemNoteHeader": "Remember to save settings after change.",
+				"DoubleSetBuffersListItem": "Double",
+				"TripleForceSetBuffersListItem": "Triple [force]",
+				"TripleSetBuffersListItem": "Triple",
+				"QuadrupleForceSetBuffersListItem": "Quadruple [force]",
+				"QuadrupleSetBuffersListItem": "Quadruple",
+				"NVNWindowSyncWaitSyncModeOverlayFrame": "NVN Window Sync Wait",
+				"SyncModeSyncModeOverlayFrameSubtitle": "Mode",
+				"EnabledSyncModeSyncModeListItem": "Enabled",
+				"OnSyncModeAdvancedGuiListItemText": "On",
+				"SemiEnabledSyncModeSyncModeListItem": "Semi-Enabled",
+				"SemiSyncModeAdvancedGuiListItemText": "Semi",
+				"DisabledSyncModeSyncModeListItem": "Disabled",
+				"OffSyncModeAdvancedGuiListItemText": "Off",
+				"ConfigFileNotFoundAdvancedGuiCustomDrawerText": "Game config file not found\nTID: %016lX\nBID: %016lX",
+				"ConfigErrorAdvancedGuiCustomDrawerText": "Game config error: 0x%X",
+				"PatchFileNotExistAdvancedGuiCustomDrawerText": "Patch file doesn't exist.",
+				"PatchFileNotExistMoreAdvancedGuiCustomDrawerText": "Patch file doesn't exist.\nUse \"Convert config to patch file\"\nto make it!",
+				"NewConfigDownloadSuccessAdvancedGuiCustomDrawerText": "New config downloaded successfully.\nUse \"Convert config to patch file\"\nto make it applicable!",
+				"PatchFileExistAdvancedGuiCustomDrawerText": "Patch file exists.",
+				"AdvancedSettingsAdvancedGuiOverlayFrameSubTitle": "Advanced settings",
+				"ConfigFileValidAdvancedGuiCustomDrawerText": "Found valid config file!",
+				"NVNAdvancedGuiCategoryHeader": "GPU API Interface: NVN",
+				"SyncWaitAdvancedGuiListItem": "Window Sync Wait",
+				"SetBufferingAdvancedGuiListItem": "Set Buffering",
+				"EGLAdvancedGuiCategoryHeader": "GPU API Interface: EGL",
+				"VulkanAdvancedGuiCategoryHeader": "GPU API Interface: Vulkan",
+				"PatchesAdvancedGuiCategoryHeader": "FPSLocker Patches",
+				"PatchWillBeAppliedNextGameBootAdvancedGuiNoteHeader": "Remember to reboot the game after conversion!",
+				"ConvertConfigToPatchFileAdvancedGuiListItem": "Convert config to patch file",
+				"PatchFileCreatedSuccessAdvancedGuiListItemText": "Patch file created successfully.\nRestart the game and change\nFPS Target to apply the patch!",
+				"PatchFileCreateFailedAdvancedGuiListItemText": "Error while creating patch: 0x%x",
+				"DeletePatchFileAdvancedGuiListItem": "Delete patch file",
+				"DeletePatchSuccessfulFileAdvancedGuiListItemText": "Patch file deleted successfully.",
+				"Take30sAdvancedGuiListItemText": "This can take up to 30 seconds.",
+				"CheckOrDownloadConfigFileAdvancedGuiListItemText": "Check/download config file",
+				"CheckWarehouseAdvancedGuiListItemText": "Checking Warehouse for config...\nExit not possible until finished!",
+				"PluginLoadedUpdateAdvancedGuiCustomDrawerText": "Patch was loaded to game.",
+				"MasterWriteLoadedUpdateAdvancedGuiCustomDrawerText": "Master Write was loaded to game.",
+				"PluginNotApplyUpdateAdvancedGuiCustomDrawerText": "Plugin didn't apply patch to game.",
+				"SetOrActiveOrAvailableBuffersUpdateAdvancedGuiCustomDrawerText": "Set/Active/Available buffers: %d/%d/%d",
+				"ActiveBuffersUpdateAdvancedGuiCustomDrawerText": "Active buffers: %d",
+				"ConnectionTimeoutAdvancedGuiListItemText": "Connection timeout!",
+				"ConfigNotAvailableAdvancedGuiListItemText": "Config is not available! RC: 0x%x",
+				"ConfigNotAvailable404AdvancedGuiListItemText": "Config is not available!\nChecking Warehouse for more info...\nExit not possible until finished!",
+				"ConfigNotAvailableTimeoutAdvancedGuiListItemText": "Config is not available!\nChecking Warehouse for more info...\nTimeout! It took too long to check.",
+				"ConfigNotAvailableConnectionErrorAdvancedGuiListItemText": "Config is not available!\nChecking Warehouse for more info...\nConnection error!",
+				"NoNewConfigAdvancedGuiListItemText": "No new config available.",
+				"InternetConnectionNotAvailableAdvancedGuiListItemText": "Internet connection not available!",
+				"PatchNotNeededAdvancedGuiListItemText": "Patch is not needed for this game!",
+				"NotListedInWarehouseAdvancedGuiListItemText": "This game is not listed in Warehouse!",
+				"DiffVersionListedInWarehouseNoNeedPatchAdvancedGuiListItemText": "This game is listed in Warehouse,\nbut with different version. Other\nversion doesn't need a patch, your\nversion maybe doesn't need it too!",
+				"DiffVersionListedInWarehouseNoPatchAdvancedGuiListItemText": "This game is listed in Warehouse,\nbut with different version.\nOther version recommends patch,\nbut config is not available even for it!",
+				"DiffVersionListedInWarehouseOtherVersionAvailableAdvancedGuiListItemText": "This game is listed in Warehouse,\nbut with different version.\nOther version has config available!",
+				"ListedInWarehousePatchNotAvailableAdvancedGuiListItemText": "This game is listed in Warehouse\nwith patch recommended for this\nversion, but config is not available!",
+				"ConnectionErrorAdvancedGuiListItemText": "Connection error! RC: 0x%x",
+				"DeleteSettingsNoGameSubListItem": "Delete settings",
+				"DeletePatchesNoGameSubListItem": "Delete patches",
+				"SaltyNXNotWorkingNoGame2CustomDrawerText": "SaltyNX is not working!",
+				"SaltyNXNotFoundNoGame2CustomDrawerText": "Can't detect NX-FPS plugin on sdcard!",
+				"GameNotRunningNoGame2CustomDrawerText": "Game is not running!",
+				"ErrorNoGame2ListItem": "Err: 0x%x",
+				"AllNoGame2ListItem": "All",
+				"EverythingNoGame2ListItemText": "Everything",
+				"DisplayGuiOverlayFrameText": "Display settings",
+				"NotAvailableForOledHintDockedSettingsCustomDrawerText": "Not available for Switch OLED\nin handheld mode.",
+				"IncreaseRefreshRateDisplayGuiListItem": "Increase Refresh Rate",
+				"DecreaseRefreshRateDisplayGuiListItem": "Decrease Refresh Rate",
+				"ChangeRefreshRateDisplayGuiListItem": "Change Refresh Rate",
+				"MatchRefreshRateCategoryHeader": "Match refresh rate with FPS Target.",
+				"DisplaySyncToggleListItem": "Display Sync",
+				"DockedSettingsToggleListItem": "Docked Settings",
+				"RefreshRateUpdateDockedSettingsCustomDrawerText": "Display Refresh Rate: %d Hz",
+				"LCDRefreshRateUpdateDisplayGuiCustomDrawerText": "LCD Refresh Rate: %d Hz",
+				"NotAvailableInDockedModeUpdateDisplayGuiCustomDrawerText": "Not available in docked mode!",
+				"WarningWarningDisplayGuiCustomDrawerText": "THIS IS EXPERIMENTAL FUNCTION!\n\nIt can cause irreparable damage\nto your display.\n\nBy pressing Accept you are taking\nfull responsibility for anything\nthat can occur because of this tool.",
+				"DockedWarningDisplayGuiCustomDrawerText": "This function is not available\nin docked mode!\n\nAccept button is disabled.",
+				"DisplaySettingWarningWarningDisplayGuiOverlayFrameText": "Display settings warning",
+				"DeclineWarningDisplayGuiListItem": "Decline",
+				"AcceptWarningDisplayGuiListItem": "Accept",
+				"SaltyNXNotWorkingNoGameCustomDrawerText": "SaltyNX is not working!",
+				"SaltyNXNotFoundNoGameCustomDrawerText": "Can't detect NX-FPS plugin on sdcard!",
+				"GameNotRunningNoGameCustomDrawerText": "Game is not running!",
+				"GameListNoGameListItem": "Games list",
+				"DisplaySettingsNoGameListItem": "Display settings",
+				"ChangeFPSTargetDockedFPSTargetGuiOverlayFrame": "Change FPS Target",
+				"SaltNXNotWorkingGuiTestCustomDrawerText": "SaltyNX is not working!",
+				"SaltNXNotFoundGuiTestCustomDrawerText": "Can't detect NX-FPS plugin on sdcard!",
+				"GameClosedGuiTestCustomDrawerText": "Game was closed! Overlay disabled!",
+				"GameNotRunningGuiTestCustomDrawerText": "Game is not running! Overlay disabled!",
+				"GameRunningGuiTestCustomDrawerText": "Game is running.",
+				"NXFPSNotRunningGuiTestCustomDrawerText": "NX-FPS is not running!",
+				"NXFPSRunningNoFrameProcessedGuiTestCustomDrawerText": "NX-FPS is running, but no frame was processed.",
+				"RestartOverlayToCheckGuiTestCustomDrawerText": "Restart overlay to check again.",
+				"NXFPSRunningGuiTestCustomDrawerText": "NX-FPS is running.",
+				"IncreaseFPSGuiTestListItem": "Increase FPS target",
+				"DecreaseFPSGuiTestListItem": "Decrease FPS target",
+				"ChangeFPSGuiTestListItem": "Change FPS target",
+				"DisableFPSGuiTestListItem": "Disable custom FPS target",
+				"AdvancedSettingsGuiTestListItem": "Advanced settings",
+				"SaveSettingsGuiTestListItem": "Save settings",
+				"DisplaySettingsGuiTestListItem": "Display settings",
+				"IntervalModeUnusedUpdateGuiTestListItem": "Interval Mode: 0 [Unused]",
+				"IntervalModeFPSUpdateGuiTestListItem": "Interval Mode: %d [%d FPS]",
+				"IntervalModeWrongUpdateGuiTestListItem": "Interval Mode: %d [Wrong]",
+				"CustomFPSDisabledUpdateGuiTestListItem": "Custom FPS Target: Disabled",
+				"CustomFPSUpdateGuiTestListItem": "Custom FPS Target: %d",
+				"FrameskipTesterDockedFrameskipGuiOverlayFrame": "Frameskip tester",
+				"HowToUseDockedFrameskipGuiCustomDrawerText": "How to use it:\n1. Get a camera with options to manually set shutter speed and ISO.\n2. Set shutter speed to 1/10s or longer, and ISO so it's not too bright or dark (usually around 50 for 1/10s).\n3. Press \uE0E0 to continue.\n4. Take picture of display.\n5. If all blocks except for first and last are unevenly bright, your display doesn't support natively your current refresh rate and it's running at some other refresh rate.\n\nStill take into consideration that even if your display is frameskipping, it still works miles better than using lower FPS target that doesn't match your refresh rate because hardware solution is the best way to divide evenly frametimes.",
+				"ExitHintDockedFrameskipGuiCustomDrawerText": "Press \uE0E1 to exit",
+				"RenderingTooLongHintDockedFrameskipGuiCustomDrawerText": "Rendering takes too long!\nClose game, go to home screen,\ntry again.",
+				"DockedDisplaySettingDockedWizardGuiOverlayFrame": "Docked display settings wizard",
+				"MenuHelpHintDockedFrameskipGuiCustomDrawerText": "This menu will go through all\nsupported refresh rates below 60 Hz:\n40, 45, 50, 55. Press button you are\nasked for to confirm that it works.\nIf nothing is pressed in 15 seconds,\nit will check next refresh rate.",
+				"StartHintDockedFrameskipGuiCustomDrawerText": "To start press X.",
+				"Check40HzWorkingStatusHintDockedFrameskipGuiCustomDrawerText": "Press ZL to confirm 40 Hz is working.",
+				"CheckXWorkingStatusHintDockedFrameskipGuiCustomDrawerText": "Press X to confirm %d Hz is working.",
+				"CheckYWorkingStatusHintDockedFrameskipGuiCustomDrawerText": "Press Y to confirm %d Hz is working.",
+				"CheckZRzWorkingStatusHintDockedFrameskipGuiCustomDrawerText": "Press ZR to confirm %d Hz is working.",
+				"DockedDisplayManualSettingsDockedManualGuiOverlayFrame": "Docked display manual settings",
+				"DockedDisplayAdditionalSettingsDockedAdditionalGuiOverlayFrame": "Docked display additional settings",
+				"AllowPatchesForce60HzDockedAdditionalGuiToggleListItem": "Allow patches to force 60 Hz",
+				"UseLowestRefreshRateForUnmatchedDockedAdditionalGuiToggleListItem": "Use lowest refresh rate for unmatched FPS targets",
+				"DockedDisplaySettingsDockedGuiOverlayFrame": "Docked display settings",
+				"ReportMaxRefreshRateDockedGuiCustomDrawerText": "Reported max refresh rate: %d Hz",
+				"AllowedRefreshRatesDockedGuiListItem": "Allowed refresh rates",
+				"RefreshRateWizardDockedGuiListItem": "Refresh rate wizard",
+				"FrameskipTesterDockedGuiListItem": "Frameskip tester",
+				"AdditionalSettingsDockedGuiListItem": "Additional settings",
+				"HintUpdateDockedGuiCustomDrawerText": "You are not in docked mode.\nGo back, put your Switch to dock\nand come back.",
+				"ChangeRefreshRateDockedRefreshRateChangeGuiOverlayFrame": "Change Refresh Rate"
+			}
+		)";
+		std::string lanPath = std::string("sdmc:/switch/.overlays/lang/") + APPTITLE + "/";
+		fsdevMountSdmc();
+		tsl::hlp::doWithSmSession([&lanPath, &jsonStr]{
+			tsl::tr::InitTrans(lanPath, jsonStr);
+		});
 
 		tsl::hlp::doWithSmSession([]{
-			
 			setsysInitialize();
 			SetSysProductModel model;
 			if (R_SUCCEEDED(setsysGetProductModel(&model))) {
@@ -786,7 +929,6 @@ public:
 				}
 			}
 			setsysExit();
-			fsdevMountSdmc();
 			FILE* file = fopen("sdmc:/SaltySD/flags/displaysync.flag", "rb");
 			if (file) {
 				displaySync = true;
@@ -812,7 +954,7 @@ public:
 
 			if (R_FAILED(pmdmntGetApplicationProcessId(&PID))) return;
 			check = true;
-			
+
 			ptrdiff_t rel_offset = searchSharedMemoryBlock(base);
 			if (rel_offset > -1) {
 				Shared = (NxFpsSharedBlock*)(base + rel_offset);
