@@ -124,7 +124,6 @@ void getDockedHighestRefreshRate(uint8_t* highestRefreshRate, uint8_t* setLinkRa
 	if (R_SUCCEEDED(rc) && setLinkRate) *setLinkRate = linkRate;
 	if (R_SUCCEEDED(rc) && refreshRate > 60) *highestRefreshRate = refreshRate;
 	else *highestRefreshRate = 60;
-
 }
 
 void SaveDockedModeAllowedSave(DockedModeRefreshRateAllowed rr, DockedAdditionalSettings &as) {
