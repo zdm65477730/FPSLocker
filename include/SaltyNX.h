@@ -506,13 +506,13 @@ Result SaltySD_isPossiblyRetroRemake(bool* isPossiblyRetroRemake)
 		} *resp = (output*)r.Raw;
 
 		ret = resp->result;
-		
+
 		if (!ret)
 		{
 			*isPossiblyRetroRemake = (bool)(resp->value);
 		}
 	}
-	
+
 	return ret;
 }
 
@@ -552,6 +552,6 @@ Result SaltySD_SetDisplaySyncDocked(bool isTrue)
 
 		ret = resp->result;
 	}
-	
+
 	return ret;
 }

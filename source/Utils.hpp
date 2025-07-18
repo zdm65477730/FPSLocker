@@ -36,7 +36,6 @@ struct DockedAdditionalSettings {
 	bool fpsTargetWithoutRRMatchLowest;
 };
 
-#include "Langs.hpp"
 
 NxFpsSharedBlock* Shared = 0;
 uint8_t* refreshRate_shared = 0;
@@ -131,7 +130,6 @@ void getDockedHighestRefreshRate(uint8_t* highestRefreshRate, uint8_t* setLinkRa
 	if (R_SUCCEEDED(rc) && setLinkRate) *setLinkRate = linkRate;
 	if (R_SUCCEEDED(rc) && refreshRate > 60) *highestRefreshRate = refreshRate;
 	else *highestRefreshRate = 60;
-
 }
 
 void SaveDockedModeAllowedSave(DockedModeRefreshRateAllowed rr, DockedAdditionalSettings &as) {
@@ -607,7 +605,7 @@ std::string getAppName(uint64_t Tid)
 		sprintf(returnTID, "%016lx-", Tid);
 		return (std::string)returnTID;
 	}
-	
+
 	NacpLanguageEntry *languageEntry = nullptr;
 	smInitialize();
 	Result rc = nacpGetLanguageEntry2(&(appControlData -> nacp), &languageEntry);
