@@ -950,7 +950,7 @@ public:
 				"ChangeRefreshRateDisplayGuiListItem": "Change Refresh Rate",
 				"MatchRefreshRateDisplayGuiCategoryHeader": "Match refresh rate with FPS Target.",
 				"DisplaySyncDisplayGuiToggleListItem": "Display Sync",
-				"DockedDisplaySyncDisplayGuiToggleListItem": "Docked Display Sync"
+				"DockedDisplaySyncDisplayGuiToggleListItem": "Docked Display Sync",
 				"DockedSettingsDisplayGuiToggleListItem": "Docked Settings",
 				"RetroRemakeModeDisplayGuiToggleListItem": "Retro Remake Mode",
 				"UpdateDisplayRefreshRateDisplayGuiCustomDrawerText": "Display Refresh Rate: %d Hz",
