@@ -572,7 +572,7 @@ public:
 		if (linkRate == 30) strcpy(linkMode, "HBR3");
 		else if (linkRate == 20) strcpy(linkMode, "HBR2");
 		else if (linkRate == 6) strcpy(linkMode, "RBR");
-		else if (linkRate != 10) strcpy(linkMode, "n/d");
+		else if (linkRate != 10) strcpy(linkMode, "NDDockedGuiCustomDrawerText"_tr.c_str());
 		snprintf(Docked_c, sizeof(Docked_c), "MaxRefreshRateDockedGuiCustomDrawerText"_tr.c_str(), highestRefreshRate, linkMode, crc32);
 	}
 	size_t base_height = 128;

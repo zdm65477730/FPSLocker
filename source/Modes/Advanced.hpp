@@ -201,7 +201,7 @@ public:
 						
 						renderer->drawString(&nvnBuffers[0], false, x, y+20, 20, renderer->a(0xFFFF));
 							
-					}), 40);
+					}), 60);
 
 					if ((Shared -> Buffers) == 2 || (Shared -> SetBuffers) == 2 || (Shared -> ActiveBuffers) == 2) {
 						auto *clickableListItem3 = new tsl::elm::MiniListItem("SyncWaitAdvancedGuiListItem"_tr, ZeroSyncMode);
@@ -325,7 +325,7 @@ public:
 		});
 		list->addItem(clickableListItem4);
 
-		list->addItem(new tsl::elm::CategoryHeader("Misc", false));
+		list->addItem(new tsl::elm::CategoryHeader("MiscAdvancedGuiCategoryHeader"_tr, false));
 
 		auto *clickableListItem5 = new tsl::elm::MiniToggleListItem("HaltUnfocusedGameAdvancedGuiListItemText"_tr, forceSuspend_save);
 		clickableListItem5->setClickListener([this](u64 keys) { 

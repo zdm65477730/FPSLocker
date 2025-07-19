@@ -203,6 +203,7 @@ public:
 
 				list->addItem(clickableListItem);
 			}
+			mutexUnlock(&TitlesAccess);
 		}
 
 		frame->setContent(list);
@@ -520,7 +521,8 @@ public:
 				renderer->drawString(FPSTarget_c, false, x, y+86, 20, renderer->a(0xFFFF));
 				if (render100Above) renderer->drawString(PFPS_c, false, x+265, y+48, 50, renderer->a(0xFFFF));
 				else renderer->drawString(PFPS_c, false, x+290, y+48, 50, renderer->a(0xFFFF));
-				if (Shared -> forceOriginalRefreshRate) renderer->drawString("PatchNowForcing60HzGuiTestCustomDrawerText"_tr.c_str(), false, x, y+80, 20, renderer->a(0xF99F));
+				renderer->drawString("FPSGuiTestCustomDrawerText"_tr.c_str(), false, x+320, y+70, 20, renderer->a(0xFFFF));
+				if (Shared -> forceOriginalRefreshRate) renderer->drawString("PatchNowForcing60HzGuiTestCustomDrawerText"_tr.c_str(), false, x, y+129, 20, renderer->a(0xF99F));
 			}
 		}), 170);
 
@@ -829,6 +831,7 @@ public:
 				"NXFPSRunningNoFrameProcessedGuiTestCustomDrawerText": "NX-FPS is running, but no frame was processed.",
 				"RestartOverlayToCheckGuiTestCustomDrawerText": "Restart overlay to check again.",
 				"NXFPSRunningGuiTestCustomDrawerText": "NX-FPS is running.",
+				"FPSGuiTestCustomDrawerText": "FPS",
 				"PatchNowForcing60HzGuiTestCustomDrawerText": "Patch is now forcing 60 Hz.",
 				"IncreaseFPSGuiTestListItem": "Increase FPS target",
 				"DecreaseFPSGuiTestListItem": "Decrease FPS target",
@@ -883,6 +886,7 @@ public:
 				"Take30sAdvancedGuiListItemText": "This can take up to 30 seconds.",
 				"CheckOrDownloadConfigFileAdvancedGuiListItemText": "Check/download config file",
 				"CheckWarehouseAdvancedGuiListItemText": "Checking Warehouse for config...\nExit not possible until finished!",
+				"MiscAdvancedGuiCategoryHeader": "Misc",
 				"HaltUnfocusedGameAdvancedGuiListItemText": "Halt unfocused game",
 				"PluginLoadedUpdateAdvancedGuiCustomDrawerText": "Patch was loaded to game.",
 				"MasterWriteLoadedUpdateAdvancedGuiCustomDrawerText": "Master Write was loaded to game.",
@@ -931,6 +935,7 @@ public:
 				"AllowPatchesForce60HzDockedAdditionalGuiToggleListItem": "Allow patches to force 60 Hz",
 				"UseLowestRefreshRateForUnmatchedDockedAdditionalGuiToggleListItem": "Use lowest refresh rate for unmatched FPS targets",
 				"MaxRefreshRateDockedGuiCustomDrawerText": "Max refresh rate available: %u Hz\nmyDP link rate: %s\nConfig ID: %08X",
+				"NDDockedGuiCustomDrawerText": "n/d",
 				"DockedDisplaySettingsDockedGuiOverlayFrame": "Docked display settings",
 				"Allowed1080pRefreshRatesDockedGuiListItem": "Allowed 1080p refresh rates",
 				"DisplayUnderclockWizardDockedGuiListItem": "Display underclock wizard",
@@ -1036,7 +1041,6 @@ public:
 		threadWaitForExit(&t0);
 		threadClose(&t0);
 		shmemClose(&_sharedmemory);
-		setsysExit();
 		nsExit();
 		ommExit();
 		fsdevUnmountDevice("sdmc");

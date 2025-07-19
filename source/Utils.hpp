@@ -647,19 +647,3 @@ Result getTitles(int32_t count)
 void TitlesThread(void*) {
 	getTitles(32);
 }
-
-void setForceEnglishLanguage(bool set) {
-	uintptr_t ptr_func = (uintptr_t)&TitlesThread;
-	MemoryInfo mem = {0};
-	u32 pageinfo = 0;
-	svcQueryMemory(&mem, &pageinfo, ptr_func);
-	bool* ptrBool = (bool*)&forceEnglishLanguage;
-	uintptr_t ptrBool_integer = (uintptr_t)ptrBool;
-	ptrdiff_t ptrBool_offset = ptrBool_integer - mem.addr;
-	FILE* file = fopen(overlayName.c_str(), "rb+");
-	if (file) {
-		fseek(file, ptrBool_offset, 0);
-		fwrite(&set, 1, 1, file);
-		fclose(file);
-	}
-}

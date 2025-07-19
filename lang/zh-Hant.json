@@ -1,5 +1,6 @@
 {
-	"PluginName": "FPS鎖定",
+	"PluginName": "FPS鎖定工具",
+
 	"DeleteSettingsNoGameSubListItem": "刪除設定",
 	"DeletePatchesNoGameSubListItem": "刪除補丁",
 	"SaltyNXNotWorkingNoGame2CustomDrawerText": "SaltyNX 無法正常工作！",
@@ -23,6 +24,7 @@
 	"NXFPSRunningNoFrameProcessedGuiTestCustomDrawerText": "NX-FPS 正在執行，但未處理任何畫面。",
 	"RestartOverlayToCheckGuiTestCustomDrawerText": "重新啟動浮動視窗以重新檢查。",
 	"NXFPSRunningGuiTestCustomDrawerText": "NX-FPS 正在執行。",
+	"FPSGuiTestCustomDrawerText": "畫面刷新率",
 	"PatchNowForcing60HzGuiTestCustomDrawerText": "補丁正在強制啟用60Hz。",
 	"IncreaseFPSGuiTestListItem": "提高FPS目標值",
 	"DecreaseFPSGuiTestListItem": "降低FPS目標值",
@@ -37,6 +39,7 @@
 	"IntervalModeWrongUpdateGuiTestListItem": "間隔模式：%d [錯誤]",
 	"CustomFPSDisabledUpdateGuiTestListItem": "自訂FPS目標值：已停用",
 	"CustomFPSUpdateGuiTestListItem": "自訂FPS目標值：%d",
+
 	"SetBufferingSetBuffersOverlayFrame": "設定緩衝",
 	"AppliedNextGameBootSetBuffersListItemCategoryHeader": "將在下次遊戲啟動時套用。",
 	"RememberSaveSettingsSetBuffersListItemNoteHeader": "修改後請記得儲存設定。",
@@ -76,6 +79,7 @@
 	"Take30sAdvancedGuiListItemText": "此過程可能需要長達30秒。",
 	"CheckOrDownloadConfigFileAdvancedGuiListItemText": "檢查/下載設定檔",
 	"CheckWarehouseAdvancedGuiListItemText": "正在倉庫中檢查設定...\n完成前無法退出！",
+	"MiscAdvancedGuiCategoryHeader": "其他",
 	"HaltUnfocusedGameAdvancedGuiListItemText": "暫停未聚焦的遊戲",
 	"PluginLoadedUpdateAdvancedGuiCustomDrawerText": "補丁已載入到遊戲中。",
 	"MasterWriteLoadedUpdateAdvancedGuiCustomDrawerText": "主寫入已載入到遊戲中。",
@@ -96,6 +100,7 @@
 	"DiffVersionListedInWarehouseOtherVersionAvailableAdvancedGuiListItemText": "此遊戲已在倉庫中列出，\n但版本不同。\n其他版本有可用設定！",
 	"ListedInWarehousePatchNotAvailableAdvancedGuiListItemText": "此遊戲已在倉庫中列出，\n且該版本建議使用補丁，\n但無可用設定！",
 	"ConnectionErrorAdvancedGuiListItemText": "連線錯誤！RC：0x%x",
+
 	"FrameskipTesterDockedFrameskipGuiOverlayFrame": "跳幀測試器",
 	"HowToUseDockedFrameskipGuiCustomDrawerText": "使用方法：\n1. 準備一台可手動設定快門速度和ISO的相機。\n2. 將快門速度設定為1/10秒或更長，ISO設定為適中（1/10秒時通常約為50）。\n3. 按\uE0E0繼續。\n4. 拍攝顯示器畫面。\n5. 如果除第一個和最後一個區塊外，其他區塊亮度不均勻，則您的顯示器不原生支援當前刷新率，而是以其他刷新率執行。\n\n仍需注意，即使顯示器存在跳幀，其效果也遠好於使用與刷新率不匹配的低FPS目標值，因為硬體解決方案是均勻分配畫面時間的最佳方式。",
 	"ExitHintDockedFrameskipGuiCustomDrawerText": "按\uE0E1退出",
@@ -109,7 +114,7 @@
 	"CheckXWorkingStatusHintDockedWizardGuiCustomDrawerText": "按X確認%dHz可正常工作。",
 	"CheckYWorkingStatusHintDockedWizardGuiCustomDrawerText": "按Y確認%dHz可正常工作。",
 	"CheckZRzWorkingStatusHintDockedWizardGuiCustomDrawerText": "按ZR確認%dHz可正常工作。",
-	"PressButtonHintDockedOverWizardGuiOverlayFrameCustomDrawerText": "此選單將遍歷所有\n60Hz以上的支援刷新率，\n最高達%dHz。僅1080p輸出需要此操作，\n720p下所有功能應正常工作。\n\n按提示的按鈕\n確認其可正常工作。\n如果15秒內未按任何按鈕，\n將檢查下一個刷新率。\n此過程可能需要%d秒。",
+	"PressButtonHintDockedOverWizardGuiOverlayFrameCustomDrawerText": "此選單將遍歷所有\n60Hz以上的支援刷新率，\n最高達%dHz。僅1080p輸出需要此操作，\n720p下所有功能應正常工作。\n\n按提示的按鈕\n確認其可正常工作。\n如果10秒內未按任何按鈕，\n將檢查下一個刷新率。\n此過程可能需要%d秒。",
 	"DisplayOverclockWizardDockedOverWizardGuiOverlayFrame": "顯示器超頻精靈",
 	"PressButtonDockedOverWizardGuiOverlayFrameCustomDrawerText": "按X開始。",
 	"PressButtonNotSupportAtResolutionDockedOverWizardGuiOverlayFrameCustomDrawerText": "%dp不支援！",
@@ -123,6 +128,7 @@
 	"AllowPatchesForce60HzDockedAdditionalGuiToggleListItem": "允許補丁強制啟用60Hz",
 	"UseLowestRefreshRateForUnmatchedDockedAdditionalGuiToggleListItem": "為不匹配的FPS目標值使用最低刷新率",
 	"MaxRefreshRateDockedGuiCustomDrawerText": "可用最高刷新率：%uHz\nmyDP鏈路速率：%s\n配置ID：%08X",
+	"NDDockedGuiCustomDrawerText": "無資料",
 	"DockedDisplaySettingsDockedGuiOverlayFrame": "底座模式顯示器設定",
 	"Allowed1080pRefreshRatesDockedGuiListItem": "允許的1080p刷新率",
 	"DisplayUnderclockWizardDockedGuiListItem": "顯示器降頻精靈",
