@@ -48,7 +48,6 @@ struct DockedAdditionalSettings {
 	bool displaySyncDockedOutOfFocus60;
 };
 
-#include "Langs.hpp"
 
 NxFpsSharedBlock* Shared = 0;
 uint8_t* refreshRate_shared = 0;
@@ -106,9 +105,6 @@ uint8_t supportedHandheldRefreshRates[] = {40, 45, 50, 55, 60};
 uint8_t supportedHandheldRefreshRatesOLED[] = {45, 50, 55, 60};
 Mutex TitlesAccess;
 
-volatile const bool forceEnglishLanguage = false;
-std::string overlayName = "sdmc:/switch/.overlays/";
-
 LEvent threadexit = {0};
 
 struct Title
@@ -151,7 +147,6 @@ void getDockedHighestRefreshRate(uint8_t* highestRefreshRate, uint8_t* setLinkRa
 	if (R_SUCCEEDED(rc) && setLinkRate) *setLinkRate = linkRate;
 	if (R_SUCCEEDED(rc) && refreshRate > 60) *highestRefreshRate = refreshRate;
 	else *highestRefreshRate = 60;
-
 }
 
 void LoadDockedModeAllowedSave(DockedModeRefreshRateAllowed &rr, DockedAdditionalSettings &as, int* displayCRC, bool is720p) {
@@ -233,6 +228,7 @@ void LoadDockedModeAllowedSave(DockedModeRefreshRateAllowed &rr, DockedAdditiona
 					}
 				}
 			}
+			
 		}
 		if (iniData["Common"].contains("allowPatchesToForce60InDocked") == true) {
 			as.dontForce60InDocked = (bool)!strncasecmp(iniData["Common"]["allowPatchesToForce60InDocked"].c_str(), "False", 5);
@@ -686,7 +682,7 @@ std::string getAppName(uint64_t Tid)
 		sprintf(returnTID, "%016lx-", Tid);
 		return (std::string)returnTID;
 	}
-	
+
 	NacpLanguageEntry *languageEntry = nullptr;
 	smInitialize();
 	Result rc = nacpGetLanguageEntry2(&(appControlData -> nacp), &languageEntry);
@@ -727,22 +723,6 @@ Result getTitles(int32_t count)
 
 void TitlesThread(void*) {
 	getTitles(32);
-}
-
-void setForceEnglishLanguage(bool set) {
-	uintptr_t ptr_func = (uintptr_t)&TitlesThread;
-	MemoryInfo mem = {0};
-	u32 pageinfo = 0;
-	svcQueryMemory(&mem, &pageinfo, ptr_func);
-	bool* ptrBool = (bool*)&forceEnglishLanguage;
-	uintptr_t ptrBool_integer = (uintptr_t)ptrBool;
-	ptrdiff_t ptrBool_offset = ptrBool_integer - mem.addr;
-	FILE* file = fopen(overlayName.c_str(), "rb+");
-	if (file) {
-		fseek(file, ptrBool_offset, 0);
-		fwrite(&set, 1, 1, file);
-		fclose(file);
-	}
 }
 
 bool saveSettings() {

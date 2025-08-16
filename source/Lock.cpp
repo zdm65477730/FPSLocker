@@ -161,11 +161,11 @@ namespace LOCK {
 			temp_size++;
 			return temp_size;
 		}
-		
+
 		for (size_t i = 0; i < entry.num_children(); i++) {
 
 			entry[i]["type"] >> string_check;
-			
+
 			temp_size++;
 			if (!string_check.compare("write") || !string_check.compare("evaluate_write")) {
 				temp_size++; // address count
@@ -191,7 +191,7 @@ namespace LOCK {
 						temp_size += string_check.size() + 1;
 					}
 				}
-				
+
 			}
 			else if (!string_check.compare("compare") || !string_check.compare("evaluate_compare")) {
 				bool evaluate_compare = false;
@@ -232,7 +232,7 @@ namespace LOCK {
 			}
 			else return 2;
 		}
-		
+
 		temp_size++;
 		return temp_size;
 	}
@@ -295,10 +295,10 @@ namespace LOCK {
 			return 0;
 		}
 		for (size_t i = 0; i < entry.num_children(); i++) {
-		
+
 			entry[i]["type"] >> string_check;
 			if (!string_check.compare("write") || !string_check.compare("evaluate_write")) {
-				
+
 				bool evaluate_write = false;
 				if (!string_check.compare("evaluate_write"))
 					evaluate_write = true;
@@ -344,7 +344,7 @@ namespace LOCK {
 				bool evaluate_write = false;
 				if (!string_check.compare("evaluate_compare"))
 					evaluate_write = true;
-				
+
 				buffer[temp_size++] = (evaluate_write ? 0x82 : 2);
 				buffer[temp_size++] = entry[i]["compare_address"].num_children();
 				entry[i]["compare_address"][0] >> string_check;
@@ -410,10 +410,10 @@ namespace LOCK {
 
 	template <typename T>
 	Result NOINLINE processEntry(T entry, bool masterWrite = false) {
-		
+
 		size_t temp_size = 0;
 		size_t old_temp_size = 0;
-		
+
 		temp_size = calculateSize(entry, masterWrite);
 
 		uint8_t* buffer = (uint8_t*)calloc(temp_size, sizeof(uint8_t));
@@ -445,14 +445,14 @@ namespace LOCK {
 		uint8_t flags[4] = {gen, master_write, compiledSize, unsafeCheck};
 
 		Result ret = -1;
-		
+
 		ret = processEntry(tree["ALL_FPS"], false);
 
 		if (R_FAILED(ret)) {
 			freeBuffers();
 			return ret;
 		}
-		
+
 		if (master_write) {
 			Result ret = processEntry(tree["MASTER_WRITE"], true);
 			if (R_FAILED(ret)) {

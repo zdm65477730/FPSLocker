@@ -7,7 +7,7 @@ namespace LOCK {
 
 	extern char configBuffer[32770];
 	extern ryml::Tree tree;
-	
+
 	Result createPatch(const char* path);
 	Result readConfig(const char* path);
 

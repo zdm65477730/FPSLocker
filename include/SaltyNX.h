@@ -596,6 +596,6 @@ Result SaltySD_SetDisplaySyncRefreshRate60WhenOutOfFocus(bool isDocked, bool isT
 
 		ret = resp->result;
 	}
-	
+
 	return ret;
 }
