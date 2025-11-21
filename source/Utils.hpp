@@ -56,8 +56,6 @@ struct DockedAdditionalSettings {
 	bool displaySyncDockedOutOfFocus60;
 };
 
-#include "Langs.hpp"
-
 NxFpsSharedBlock* Shared = 0;
 uint8_t* refreshRate_shared = 0;
 bool _isDocked = false;
@@ -115,7 +113,6 @@ uint8_t supportedHandheldRefreshRates[] = {40, 45, 50, 55, 60};
 uint8_t supportedHandheldRefreshRatesOLED[] = {45, 50, 55, 60};
 Mutex TitlesAccess;
 
-volatile const bool forceEnglishLanguage = false;
 std::string overlayName = "sdmc:/switch/.overlays/";
 
 LEvent threadexit = {0};
@@ -401,7 +398,6 @@ void downloadPatch(void*) {
 		}
 		delete appControlData;
 		delete[] appContentMetaStatus;
-		
 
 		FILE* fp = fopen(file_path, "wb+");
 		if (!fp) {
@@ -456,7 +452,7 @@ void downloadPatch(void*) {
 			else temp_error_code = 0;
 			free(buffer);
 		}
-	
+
 		static uint64_t last_TID_checked = 0;
 		if (TID != last_TID_checked) {
 			last_TID_checked = TID;
@@ -470,7 +466,7 @@ void downloadPatch(void*) {
 				svcQueryMemory(&mem, &pageinfo, (uintptr_t)&file_exists);
 
 				char* display_version_converted = curl_easy_escape(curl_ga, display_version, 0);
-				char* app_version_converted = curl_easy_escape(curl_ga, APP_VERSION, 0);
+				char* app_version_converted = curl_easy_escape(curl_ga, VERSION, 0);
 				uint8_t valid = 1;
 				if (temp_error_code == 0x404) valid = 0;
 				else if (temp_error_code == 0x312) valid = 2;
@@ -804,22 +800,6 @@ void TitlesThread(void*) {
 	getTitles(32);
 }
 
-void setForceEnglishLanguage(bool set) {
-	uintptr_t ptr_func = (uintptr_t)&TitlesThread;
-	MemoryInfo mem = {0};
-	u32 pageinfo = 0;
-	svcQueryMemory(&mem, &pageinfo, ptr_func);
-	bool* ptrBool = (bool*)&forceEnglishLanguage;
-	uintptr_t ptrBool_integer = (uintptr_t)ptrBool;
-	ptrdiff_t ptrBool_offset = ptrBool_integer - mem.addr;
-	FILE* file = fopen(overlayName.c_str(), "rb+");
-	if (file) {
-		fseek(file, ptrBool_offset, 0);
-		fwrite(&set, 1, 1, file);
-		fclose(file);
-	}
-}
-
 bool saveSettings() {
 	if (!(Shared -> FPSlocked) && !(Shared -> FPSlockedDocked) && !(Shared -> ZeroSync) && !SetBuffers_save && !forceSuspend_save) {
 		remove(savePath);
@@ -850,7 +830,4 @@ bool saveSettings() {
 		else return false;
 	}
 	return true;
-
 }
-
-

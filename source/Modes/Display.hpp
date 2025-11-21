@@ -7,47 +7,44 @@ public:
 	int block_height = 40;
 	int columns = 18;
 	bool block;
-    uint64_t tick;
-    bool state;
-    DockedFrameskipGui() {
+	uint64_t tick;
+	bool state;
+	DockedFrameskipGui() {
 		y_1 = 0;
 		x_1 = 0;
-        tick = 0;
+		tick = 0;
 		block = false;
-        state = false;
+		state = false;
 	}
 
-    virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", getStringID(Lang::Id_FrameskipTester));
-
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "FrameskipTesterDockedFrameskipGuiOverlayFrame"_tr);
 		auto list = new tsl::elm::List();
-
 		list->addItem(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-            if (!state) {
-                renderer->drawString(getStringID(Lang::Id_HowToUseIt), false, x, y+20, 20, renderer->a(0xFFFF));
-            }
+			if (!state) {
+				renderer->drawString("HowToUseDockedFrameskipGuiCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xFFFF));
+			}
 			else if (!block) {
 				renderer->fillScreen(0xF000);
 				renderer->drawRect(x+x_1, y+y_1, block_width, block_height, renderer->a(0xFFFF));
-				renderer->drawString(getStringID(Lang::Id_PressToExit), false, x+20, y+height+20, 20, renderer->a(0xFFFF));
+				renderer->drawString("ExitHintDockedFrameskipGuiCustomDrawerText"_tr.c_str(), false, x+20, y+height+20, 20, renderer->a(0xFFFF));
 			}
 			else {
-				renderer->drawString(getStringID(Lang::Id_RenderingTakesTooLong), false, x, y+20, 20, renderer->a(0xFFFF));
+				renderer->drawString("RenderingTooLongHintDockedFrameskipGuiCustomDrawerText"_tr.c_str(), false, x, y+20, 20, renderer->a(0xFFFF));
 			}
 			
 		}), height+40);		
 		
 		frame->setContent(list);
-
-        return frame;
-    }
+		return frame;
+	}
 
 	// Called once every frame to handle inputs not handled by other UI elements
 	virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) override {
-        if (!state && (keysDown & HidNpadButton_A)) {
-            state = true;
-            return true;
-        }
+		if (!state && (keysDown & HidNpadButton_A)) {
+			state = true;
+			return true;
+		}
 		if (state && !block) {
 			y_1 += block_height;
 			y_1 %= height;
@@ -73,16 +70,16 @@ class DockedManualGui;
 class DockedWizardGui : public tsl::Gui {
 public:
 	uint64_t tick;
-    size_t i;
-	std::string Docked_c = getStringID(Lang::Id_ThisMenuWillGoThroughTo55Hz);
+	size_t i;
+	std::string Docked_c = "MenuHelpHintDockedWizardGuiCustomDrawerText"_tr;
 	char PressButton[128] = "";
 	DockedModeRefreshRateAllowed rr;
 	DockedModeRefreshRateAllowed rr_default;
 	DockedAdditionalSettings as;
 	uint8_t highestRefreshRate = 60;
 	s32 height = 1080;
-    DockedWizardGui(uint8_t highestRefreshRate_impl) {
-		snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_ToStartPressX), 40);
+	DockedWizardGui(uint8_t highestRefreshRate_impl) {
+		snprintf(PressButton, sizeof(PressButton), "StartHintDockedWizardGuiCustomDrawerText"_tr.c_str(), 40);
 		if (highestRefreshRate_impl >= 70) highestRefreshRate = highestRefreshRate_impl;
 		s32 width = 0;
 		ommGetDefaultDisplayResolution(&width, &height);
@@ -90,26 +87,23 @@ public:
 		memcpy(&rr, &rr_default, sizeof(rr));
 		memset(&rr, 1, 5);
 		tick = 0;
-        i = 0;
+		i = 0;
 	}
 
-    virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", getStringID(Lang::Id_DisplayUnderclockWizard));
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "DisplayUnderclockWizardDockedWizardGuiOverlayFrame"_tr);
 
 		auto list = new tsl::elm::List();
 
 		list->addItem(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-
 			renderer->drawString(Docked_c.c_str(), false, x, y+20, 20, renderer->a(0xFFFF));
-
 			renderer->drawString(PressButton, false, x, y+160, 20, renderer->a(0xFFFF));
 			
 		}), 200);		
 		
 		frame->setContent(list);
-
-        return frame;
-    }
+		return frame;
+	}
 
 	// Called once every frame to handle inputs not handled by other UI elements
 	virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) override {
@@ -146,13 +140,13 @@ public:
 		s32 height = 0;
 		if (R_SUCCEEDED(ommGetDefaultDisplayResolution(&width, &height))) {
 			if (height != 720 && height != 1080) {
-				snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_NotSupportedAtdp), (uint16_t)height);
+				snprintf(PressButton, sizeof(PressButton), "NotSupportAtResolutionDockedWizardGuiCustomDrawerText"_tr.c_str(), (uint16_t)height);
 				return true;
 			}
 		}
 		if (check && PluginRunning && (Shared -> pluginActive)) {
-				snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_CloseGameFirst));
-				return true;			
+				snprintf(PressButton, sizeof(PressButton), "CloseGameFirstDockedWizardGuiCustomDrawerText"_tr.c_str());
+				return true;
 		}
 		static u64 keyCheck = HidNpadButton_ZL;
 		if ((keysHeld & HidNpadButton_X) && !tick) {
@@ -165,7 +159,7 @@ public:
 				SaltySD_SetDisplayRefreshRate(40);
 				svcSleepThread(100'000);
 				SaltySD_Term();
-				snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressZlToConfirm));
+				snprintf(PressButton, sizeof(PressButton), "CheckZL40HzWorkingStatusHintDockedWizardGuiCustomDrawerText"_tr.c_str());
 			}
 			return true;
 		}
@@ -194,15 +188,15 @@ public:
 					}
 					if (i % 1 == 0) {
 						keyCheck = HidNpadButton_X;
-						snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressXToConfirm), DockedModeRefreshRateAllowedValues[i]);
+						snprintf(PressButton, sizeof(PressButton), "CheckXWorkingStatusHintDockedWizardGuiCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 					}
 					if (i % 3 == 0) {
 						keyCheck = HidNpadButton_Y;
-						snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressYToConfirm), DockedModeRefreshRateAllowedValues[i]);
+						snprintf(PressButton, sizeof(PressButton), "CheckYWorkingStatusHintDockedWizardGuiCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 					}
 					if (i % 2 == 0) {
 						keyCheck = HidNpadButton_ZR;
-						snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressZrToConfirm), DockedModeRefreshRateAllowedValues[i]);
+						snprintf(PressButton, sizeof(PressButton), "CheckZRzWorkingStatusHintDockedWizardGuiCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 					}
 					tick = svcGetSystemTick();
 					return true;
@@ -213,15 +207,15 @@ public:
 				i++;
 				if (i % 1 == 0) {
 					keyCheck = HidNpadButton_X;
-					snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressXToConfirm), DockedModeRefreshRateAllowedValues[i]);
+					snprintf(PressButton, sizeof(PressButton), "CheckXWorkingStatusHintDockedWizardGuiCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 				}
 				if (i % 3 == 0) {
 					keyCheck = HidNpadButton_Y;
-					snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressYToConfirm), DockedModeRefreshRateAllowedValues[i]);
+					snprintf(PressButton, sizeof(PressButton), "CheckYWorkingStatusHintDockedWizardGuiCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 				}
 				if (i % 2 == 0) {
 					keyCheck = HidNpadButton_ZR;
-					snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressZrToConfirm), DockedModeRefreshRateAllowedValues[i]);
+					snprintf(PressButton, sizeof(PressButton), "CheckZRzWorkingStatusHintDockedWizardGuiCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 				}
 				if (R_SUCCEEDED(SaltySD_Connect())) {
 					SaltySD_SetDisplayRefreshRate(DockedModeRefreshRateAllowedValues[i]);
@@ -238,9 +232,8 @@ public:
 class DockedOverWizardGui : public tsl::Gui {
 public:
 	uint64_t tick;
-    size_t i;
+	size_t i;
 	char Docked_c[768];
-
 	char PressButton[128];
 	DockedModeRefreshRateAllowed rr;
 	DockedModeRefreshRateAllowed rr_default;
@@ -249,8 +242,8 @@ public:
 	uint16_t delay_s = 10;
 	bool block = false;
 	s32 height = 1080;
-    DockedOverWizardGui(uint8_t maxRefreshRate) {
-		snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_ToStartPressX), 70);
+	DockedOverWizardGui(uint8_t maxRefreshRate) {
+		snprintf(PressButton, sizeof(PressButton), "PressButtonDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str(), 70);
 		if (maxRefreshRate > DockedModeRefreshRateAllowedValues[sizeof(DockedModeRefreshRateAllowedValues) - 1])
 			maxRefreshRate = DockedModeRefreshRateAllowedValues[sizeof(DockedModeRefreshRateAllowedValues) - 1];
 		m_maxRefreshRate = maxRefreshRate;
@@ -269,26 +262,25 @@ public:
 				times++;
 			}
 		}
-		snprintf(Docked_c, sizeof(Docked_c), getStringID(Lang::Id_ThisMenuWillGoThroughUpTodHz), maxRefreshRate, delay_s * times);
+		snprintf(Docked_c, sizeof(Docked_c), "PressButtonHintDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str(), maxRefreshRate, delay_s * times);
 	}
 
-    virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", getStringID(Lang::Id_DisplayOverclockWizard));
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "DisplayOverclockWizardDockedOverWizardGuiOverlayFrame"_tr);
 
 		auto list = new tsl::elm::List();
 
 		list->addItem(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
 
 			renderer->drawString(Docked_c, false, x, y+20, 20, renderer->a(0xFFFF));
-
 			renderer->drawString(PressButton, false, x, y+260, 20, renderer->a(0xFFFF));
-			
-		}), 270);		
-		
+
+		}), 270);
+
 		frame->setContent(list);
 
-        return frame;
-    }
+		return frame;
+	}
 
 	// Called once every frame to handle inputs not handled by other UI elements
 	virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) override {
@@ -325,12 +317,12 @@ public:
 		s32 height = 0;
 		if (R_SUCCEEDED(ommGetDefaultDisplayResolution(&width, &height))) {
 			if (height != 1080 && height != 720) {
-				snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_NotSupportedAtdp), (uint16_t)height);
+				snprintf(PressButton, sizeof(PressButton), "PressButtonNotSupportAtResolutionDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str(), (uint16_t)height);
 				return true;
 			}
 		}
 		if (check && PluginRunning && (Shared -> pluginActive)) {
-			snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_CloseGameFirst));
+			snprintf(PressButton, sizeof(PressButton), "PressButtonCloseGameFirstDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str());
 			return true;
 		}
 		static u64 keyCheck = HidNpadButton_ZL;
@@ -344,7 +336,7 @@ public:
 				SaltySD_SetDisplayRefreshRate(DockedModeRefreshRateAllowedValues[i]);
 				svcSleepThread(100'000);
 				SaltySD_Term();
-				snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressZlToConfirm), DockedModeRefreshRateAllowedValues[i]);
+				snprintf(PressButton, sizeof(PressButton), "PressButtonZLConfirmFreqWorkingDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 			}
 			return true;
 		}
@@ -386,15 +378,15 @@ public:
 					}
 					if (i % 1 == 0) {
 						keyCheck = HidNpadButton_X;
-						snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressXToConfirm), DockedModeRefreshRateAllowedValues[i]);
+						snprintf(PressButton, sizeof(PressButton), "PressButtonXConfirmFreqWorkingDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 					}
 					if (i % 3 == 0) {
 						keyCheck = HidNpadButton_Y;
-						snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressYToConfirm), DockedModeRefreshRateAllowedValues[i]);
+						snprintf(PressButton, sizeof(PressButton), "PressButtonYConfirmFreqWorkingDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 					}
 					if (i % 2 == 0) {
 						keyCheck = HidNpadButton_ZR;
-						snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressZrToConfirm), DockedModeRefreshRateAllowedValues[i]);
+						snprintf(PressButton, sizeof(PressButton), "PressButtonZRConfirmFreqWorkingDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 					}
 					tick = svcGetSystemTick();
 					return true;
@@ -405,15 +397,15 @@ public:
 				i++;
 				if (i % 1 == 0) {
 					keyCheck = HidNpadButton_X;
-					snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressXToConfirm), DockedModeRefreshRateAllowedValues[i]);
+					snprintf(PressButton, sizeof(PressButton), "PressButtonXConfirmFreqWorkingDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 				}
 				if (i % 3 == 0) {
 					keyCheck = HidNpadButton_Y;
-					snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressYToConfirm), DockedModeRefreshRateAllowedValues[i]);
+					snprintf(PressButton, sizeof(PressButton), "PressButtonYConfirmFreqWorkingDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 				}
 				if (i % 2 == 0) {
 					keyCheck = HidNpadButton_ZR;
-					snprintf(PressButton, sizeof(PressButton), getStringID(Lang::Id_PressZrToConfirm), DockedModeRefreshRateAllowedValues[i]);
+					snprintf(PressButton, sizeof(PressButton), "PressButtonZRConfirmFreqWorkingDockedOverWizardGuiOverlayFrameCustomDrawerText"_tr.c_str(), DockedModeRefreshRateAllowedValues[i]);
 				}
 				if (R_SUCCEEDED(SaltySD_Connect())) {
 					SaltySD_SetDisplayRefreshRate(DockedModeRefreshRateAllowedValues[i]);
@@ -434,17 +426,17 @@ public:
 	DockedAdditionalSettings as;
 	uint8_t maxRefreshRate = 60;
 	s32 height = 1080;
-    DockedManualGui(uint8_t maxRefreshRate_impl) {
+	DockedManualGui(uint8_t maxRefreshRate_impl) {
 		if (maxRefreshRate_impl >= 70) maxRefreshRate = maxRefreshRate_impl;
 		s32 width = 0;
 		ommGetDefaultDisplayResolution(&width, &height);
 		LoadDockedModeAllowedSave(rr, as, nullptr, height == 720);
 	}
 
-    virtual tsl::elm::Element* createUI() override {
+	virtual tsl::elm::Element* createUI() override {
 		char string_temp[128];
-		snprintf(string_temp, sizeof(string_temp), getStringID(Lang::Id_DockedDisplayManualSettings), height);
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", string_temp);
+		snprintf(string_temp, sizeof(string_temp), "DockedDisplayManualSettingsDockedManualGuiOverlayFrame"_tr.c_str(), height);
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, string_temp);
 
 		auto list = new tsl::elm::List();
 
@@ -459,7 +451,7 @@ public:
 				}
 				return false;
 			});
-			list->addItem(clickableListItem);	
+			list->addItem(clickableListItem);
 		}
 		for (size_t i = 5; i < sizeof(DockedModeRefreshRateAllowedValues); i++) {
 			if (maxRefreshRate < DockedModeRefreshRateAllowedValues[i]) break;
@@ -475,11 +467,10 @@ public:
 			});
 			list->addItem(clickableListItem);	
 		}
-		
-		frame->setContent(list);
 
-        return frame;
-    }
+		frame->setContent(list);
+		return frame;
+	}
 
 	// Called once every frame to handle inputs not handled by other UI elements
 	virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) override {
@@ -517,18 +508,16 @@ public:
 	DockedModeRefreshRateAllowed rr = {0};
 	DockedAdditionalSettings as;
 	s32 height = 1080;
-    DockedAdditionalGui() {
+	DockedAdditionalGui() {
 		s32 width = 0;
 		ommGetDefaultDisplayResolution(&width, &height);
 		LoadDockedModeAllowedSave(rr, as, nullptr, height == 720);
 	}
 
-    virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", getStringID(Lang::Id_DockedDisplayAdditionalSettings));
-
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "DockedDisplayAdditionalSettingsDockedAdditionalGuiOverlayFrame"_tr);
 		auto list = new tsl::elm::List();
-
-		auto *clickableListItem4 = new tsl::elm::ToggleListItem(getStringID(Lang::Id_AllowPatchesToForce60Hz), !as.dontForce60InDocked);
+		auto *clickableListItem4 = new tsl::elm::ToggleListItem("AllowPatchesForce60HzDockedAdditionalGuiToggleListItem"_tr, !as.dontForce60InDocked);
 		clickableListItem4->setClickListener([this](u64 keys) { 
 			if (keys & HidNpadButton_A) {
 				as.dontForce60InDocked = !as.dontForce60InDocked;
@@ -541,10 +530,8 @@ public:
 			}
 			return false;
 		});
-
 		list->addItem(clickableListItem4);
-
-		auto *clickableListItem5 = new tsl::elm::ToggleListItem(getStringID(Lang::Id_UseLowestRefreshRate), as.fpsTargetWithoutRRMatchLowest);
+		auto *clickableListItem5 = new tsl::elm::ToggleListItem("UseLowestRefreshRateForUnmatchedDockedAdditionalGuiToggleListItem"_tr, as.fpsTargetWithoutRRMatchLowest);
 		clickableListItem5->setClickListener([this](u64 keys) { 
 			if (keys & HidNpadButton_A) {
 				as.fpsTargetWithoutRRMatchLowest = !as.fpsTargetWithoutRRMatchLowest;
@@ -557,10 +544,9 @@ public:
 			}
 			return false;
 		});
-
 		list->addItem(clickableListItem5);
 
-		auto *clickableListItem6 = new tsl::elm::ToggleListItem(getStringID(Lang::Id_60HzInHOMEMenu), as.displaySyncDockedOutOfFocus60);
+		auto *clickableListItem6 = new tsl::elm::ToggleListItem("60HzInHomeMenuDockedAdditionalGuiToggleListItem"_tr, as.displaySyncDockedOutOfFocus60);
 		clickableListItem6->setClickListener([this](u64 keys) { 
 			if (keys & HidNpadButton_A) {
 				as.displaySyncDockedOutOfFocus60 = !as.displaySyncDockedOutOfFocus60;
@@ -575,11 +561,10 @@ public:
 		});
 
 		list->addItem(clickableListItem6);
-		
-		frame->setContent(list);
 
-        return frame;
-    }
+		frame->setContent(list);
+		return frame;
+	}
 
 	// Called once every frame to handle inputs not handled by other UI elements
 	virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) override {
@@ -609,7 +594,7 @@ private:
 	bool block = false;
 	s32 height = 0;
 public:
-    DockedGui() {
+	DockedGui() {
 		s32 width = 0;
 		ommGetDefaultDisplayResolution(&width, &height);
 		mkdir("sdmc:/SaltySD/plugins/FPSLocker/", 777);
@@ -623,42 +608,37 @@ public:
 		if (linkRate == 30) strcpy(linkMode, "HBR3");
 		else if (linkRate == 20) strcpy(linkMode, "HBR2");
 		else if (linkRate == 6) strcpy(linkMode, "RBR");
-		else if (linkRate != 10) strcpy(linkMode, getStringID(Lang::Id_NoData));
-		snprintf(Docked_c, sizeof(Docked_c), getStringID(Lang::Id_MaxRefreshRateAvailable), highestRefreshRate, linkMode, crc32);
+		else if (linkRate != 10) strcpy(linkMode, "NDDockedGuiCustomDrawerText"_tr.c_str());
+		snprintf(Docked_c, sizeof(Docked_c), "MaxRefreshRateDockedGuiCustomDrawerText"_tr.c_str(), highestRefreshRate, linkMode, crc32);
 		tsl::hlp::doWithSmSession([this]{
 			if (R_SUCCEEDED(apmInitialize())) {
 				mode = ApmPerformanceMode_Invalid;
 				apmGetPerformanceMode(&mode);
 				if (mode != ApmPerformanceMode_Boost) {
 					block = true;
-					strcpy(Docked_c, getStringID(Lang::Id_YouAreInDockedMode));
+					strcpy(Docked_c, "HintUpdateDockedGuiCustomDrawerText"_tr.c_str());
 				}
 				apmExit();
 			}
 		});
 	}
-
 	size_t base_height = 128;
 
-    virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", getStringID(Lang::Id_DockedDisplaySettings));
-
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "DockedDisplaySettingsDockedGuiOverlayFrame"_tr);
 		auto list = new tsl::elm::List();
-
 		list->addItem(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-
 			renderer->drawString(Docked_c, false, x, y+20, 20, renderer->a(0xFFFF));
-			if (!block) {
+
+		if (!block) {
 				if (linkRate < 20) renderer->drawString("\uE14C", false, x+220, y+40, 20, renderer->a(0xF00F));
 				else renderer->drawString("\uE14B", false, x+220, y+40, 20, renderer->a(0xF0F0));
 			}
-
-			
 		}), 85);
 
 		if (mode == ApmPerformanceMode_Boost && (height == 720 || height == 1080)) {
 			char string_temp[128];
-			snprintf(string_temp, sizeof(string_temp), getStringID(Lang::Id_AllowedRefreshRates), height);
+			snprintf(string_temp, sizeof(string_temp), "AllowedRefreshRatesDockedGuiListItem"_tr.c_str(), height);
 			auto *clickableListItem1 = new tsl::elm::ListItem2(string_temp);
 			clickableListItem1->setClickListener([this](u64 keys) { 
 				if ((keys & HidNpadButton_A) && !block) {
@@ -670,7 +650,7 @@ public:
 
 			list->addItem(clickableListItem1);
 
-			auto *clickableListItem2 = new tsl::elm::ListItem2(getStringID(Lang::Id_DisplayUnderclockWizard));
+			auto *clickableListItem2 = new tsl::elm::ListItem2("DisplayUnderclockWizardDockedGuiListItem"_tr);
 			clickableListItem2->setClickListener([this](u64 keys) { 
 				if ((keys & HidNpadButton_A) && !block) {
 					tsl::changeTo<DockedWizardGui>(highestRefreshRate);
@@ -683,7 +663,7 @@ public:
 
 			if (highestRefreshRate >= 70) {
 				char string_temp[128];
-				snprintf(string_temp, sizeof(string_temp), getStringID(Lang::Id_pOverclockWizard), height);
+				snprintf(string_temp, sizeof(string_temp), "OverclockWizardDockedGuiListItem"_tr.c_str(), height);
 				auto *clickableListItem22 = new tsl::elm::ListItem2(string_temp);
 				clickableListItem22->setClickListener([this](u64 keys) {
 					if ((keys & HidNpadButton_A) && !block) {
@@ -696,7 +676,7 @@ public:
 				list->addItem(clickableListItem22);
 			}
 
-			auto *clickableListItem4 = new tsl::elm::ListItem2(getStringID(Lang::Id_AdditionalSettings));
+			auto *clickableListItem4 = new tsl::elm::ListItem2("AdditionalSettingsDockedGuiListItem"_tr);
 			clickableListItem4->setClickListener([this](u64 keys) { 
 				if ((keys & HidNpadButton_A) && !block) {
 					tsl::changeTo<DockedAdditionalGui>();
@@ -708,7 +688,7 @@ public:
 			list->addItem(clickableListItem4);
 		}
 
-		auto *clickableListItem3 = new tsl::elm::ListItem2(getStringID(Lang::Id_FrameskipTester));
+		auto *clickableListItem3 = new tsl::elm::ListItem2("FrameskipTesterDockedGuiListItem"_tr);
 		clickableListItem3->setClickListener([this](u64 keys) { 
 			if ((keys & HidNpadButton_A)) {
 				tsl::changeTo<DockedFrameskipGui>();
@@ -716,13 +696,11 @@ public:
 			}
 			return false;
 		});
-
 		list->addItem(clickableListItem3);
-		
-		frame->setContent(list);
 
-        return frame;
-    }
+		frame->setContent(list);
+		return frame;
+	}
 
 	virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) override {
 		if (!block) {
@@ -746,9 +724,9 @@ public:
 					return true;
 				}
 			}
+
 			smExit();
 		}
-
 		return false;
 	}
 };
@@ -769,11 +747,9 @@ public:
 	virtual tsl::elm::Element* createUI() override {
 		// A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
 		// If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
-		auto frame = new tsl::elm::OverlayFrame("FPSLocker", getStringID(Lang::Id_ChangeRefreshRate));
-
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "ChangeRefreshRateDockedRefreshRateChangeGuiOverlayFrame"_tr);
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
-
 		for (size_t i = 0; i < sizeof(rr); i++) {
 			if (rr[i] == false)
 				continue;
@@ -795,12 +771,9 @@ public:
 				}
 				return false;
 			});
-
 			list->addItem(clickableListItem);
 		}
-
 		frame->setContent(list);
-
 		return frame;
 	}
 
@@ -830,7 +803,7 @@ private:
 	bool isPossiblyRetroRemake = false;
 	bool RetroRemakeMode = false;
 public:
-    DisplayGui() {
+	DisplayGui() {
 		if (isLite) {
 			entry_mode = ApmPerformanceMode_Normal;
 			if (R_SUCCEEDED(SaltySD_Connect())) {
@@ -854,19 +827,14 @@ public:
 	}
 	size_t base_height = 128;
 
-    virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", getStringID(Lang::Id_DisplaySettings));
-
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "DisplayGuiOverlayFrameText"_tr);
 		auto list = new tsl::elm::List();
-
 		list->addItem(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-
 			renderer->drawString(refreshRate_c, false, x, y+20, 20, renderer->a(0xFFFF));
-
 		}), 90);
-
 		if (entry_mode == ApmPerformanceMode_Normal && !displaySync.ds.handheld) {
-			auto *clickableListItem = new tsl::elm::ListItem2(getStringID(Lang::Id_IncreaseRefreshRate)); //Increase refresh rate
+			auto *clickableListItem = new tsl::elm::ListItem2("IncreaseRefreshRateDisplayGuiListItem"_tr); //Increase refresh rate
 			clickableListItem->setClickListener([this](u64 keys) { 
 				if (keys & HidNpadButton_A) {
 					if ((refreshRate_g >= (isOLED ? supportedHandheldRefreshRatesOLED[0] : supportedHandheldRefreshRates[0])) && (refreshRate_g < (isOLED ? supportedHandheldRefreshRatesOLED[sizeof(supportedHandheldRefreshRatesOLED)-1] : supportedHandheldRefreshRates[sizeof(supportedHandheldRefreshRates)-1]))) {
@@ -884,7 +852,7 @@ public:
 
 			list->addItem(clickableListItem);
 
-			auto *clickableListItem2 = new tsl::elm::ListItem2(getStringID(Lang::Id_DecreaseRefreshRate)); //Decrease refresh rate
+			auto *clickableListItem2 = new tsl::elm::ListItem2("DecreaseRefreshRateDisplayGuiListItem"_tr); //Decrease refresh rate
 			clickableListItem2->setClickListener([this](u64 keys) { 
 				if (keys & HidNpadButton_A) {
 					if (refreshRate_g > (isOLED ? supportedHandheldRefreshRatesOLED[0] : supportedHandheldRefreshRates[0])) {
@@ -903,7 +871,7 @@ public:
 			list->addItem(clickableListItem2);
 		}
 		else if (entry_mode == ApmPerformanceMode_Boost && displaySync.ds.docked) {
-			auto *clickableListItem2 = new tsl::elm::ListItem2(getStringID(Lang::Id_ChangeRefreshRate)); //Change refresh rate
+			auto *clickableListItem2 = new tsl::elm::ListItem2("ChangeRefreshRateDisplayGuiListItem"_tr); //Change refresh rate
 			clickableListItem2->setClickListener([](u64 keys) { 
 				if (keys & HidNpadButton_A) {
 					tsl::changeTo<DockedRefreshRateChangeGui>();
@@ -915,8 +883,8 @@ public:
 		}
 
 		if (!oldSalty) {
-			list->addItem(new tsl::elm::CategoryHeader(getStringID(Lang::Id_MatchRefreshRateWithFPSTarget), true));
-			auto *clickableListItem3 = new tsl::elm::ToggleListItem(getStringID(Lang::Id_HandheldDisplaySync), displaySync.ds.handheld); //Handheld Display Sync toggle
+			list->addItem(new tsl::elm::CategoryHeader("MatchRefreshRateDisplayGuiCategoryHeader"_tr, true));
+			auto *clickableListItem3 = new tsl::elm::ToggleListItem("DisplaySyncDisplayGuiToggleListItem"_tr, displaySync.ds.handheld); //Handheld Display Sync toggle
 			clickableListItem3->setClickListener([this](u64 keys) { 
 				if (keys & HidNpadButton_A) {
 					if (R_SUCCEEDED(SaltySD_Connect())) {
@@ -951,12 +919,11 @@ public:
 				}
 				return false;
 			});
-
 			list->addItem(clickableListItem3);
 
 			if (!isLite) {
 
-				auto *clickableListItem6 = new tsl::elm::ToggleListItem(getStringID(Lang::Id_DockedDisplaySync), displaySync.ds.docked); //Docked Display Sync toggle
+				auto *clickableListItem6 = new tsl::elm::ToggleListItem("DockedDisplaySyncDisplayGuiToggleListItem"_tr, displaySync.ds.docked); //Docked Display Sync toggle
 				clickableListItem6->setClickListener([this](u64 keys) { 
 					if (keys & HidNpadButton_A) {
 						if (R_SUCCEEDED(SaltySD_Connect())) {
@@ -993,8 +960,8 @@ public:
 				});
 
 				list->addItem(clickableListItem6);
-			
-				auto *clickableListItem4 = new tsl::elm::ListItem2(getStringID(Lang::Id_DockedSettings)); //Docked settings
+
+				auto *clickableListItem4 = new tsl::elm::ListItem2("DockedSettingsDisplayGuiToggleListItem"_tr); //Docked settings
 				clickableListItem4->setClickListener([this](u64 keys) { 
 					if ((keys & HidNpadButton_A)) {
 						tsl::changeTo<DockedGui>();
@@ -1007,7 +974,7 @@ public:
 			}
 
 			if (isPossiblyRetroRemake) {
-				auto *clickableListItem5 = new tsl::elm::ToggleListItem(getStringID(Lang::Id_RetroRemakeMode), RetroRemakeMode); //Retro Remake Mode toogle
+				auto *clickableListItem5 = new tsl::elm::ToggleListItem("RetroRemakeModeDisplayGuiToggleListItem"_tr, RetroRemakeMode); //Retro Remake Mode toogle
 				clickableListItem5->setClickListener([this](u64 keys) { 
 					if (keys & HidNpadButton_A) {
 						if (!RetroRemakeMode) {
@@ -1031,8 +998,8 @@ public:
 			}
 
 			if (displaySync.ds.handheld) {
-				list->addItem(new tsl::elm::CategoryHeader(getStringID(Lang::Id_HandheldOnly), true));
-				auto *clickableListItem6 = new tsl::elm::ToggleListItem(getStringID(Lang::Id_60HzInHOMEMenu), displaySyncOutOfFocus60); //HH 60Hz in Home Menu
+				list->addItem(new tsl::elm::CategoryHeader("HandheldOnlyDockedAdditionalGuiToggleListItem"_tr, true));
+				auto *clickableListItem6 = new tsl::elm::ToggleListItem("60HzInHomeMenuDockedAdditionalGuiToggleListItem"_tr, displaySyncOutOfFocus60); //HH 60Hz in Home Menu
 				clickableListItem6->setClickListener([this](u64 keys) { 
 					if (keys & HidNpadButton_A) {
 						if (R_SUCCEEDED(SaltySD_Connect())) {
@@ -1050,13 +1017,12 @@ public:
 		}
 		
 		frame->setContent(list);
-
-        return frame;
-    }
+		return frame;
+	}
 
 	virtual void update() override {
 		refreshRate_g = *refreshRate_shared;
-		snprintf(refreshRate_c, sizeof(refreshRate_c), getStringID(Lang::Id_DisplayRefreshRate), refreshRate_g);
+		snprintf(refreshRate_c, sizeof(refreshRate_c), "UpdateDisplayRefreshRateDisplayGuiCustomDrawerText"_tr.c_str(), refreshRate_g);
 	}
 
 	// Called once every frame to handle inputs not handled by other UI elements
@@ -1083,24 +1049,18 @@ public:
 class WarningDisplayGui : public tsl::Gui {
 private:
 	uint8_t refreshRate = 0;
-	std::string Warning = getStringID(Lang::Id_ThisIsExperimentalFunction);
+	std::string Warning = "WarningWarningDisplayGuiCustomDrawerText"_tr.c_str();
 public:
-    WarningDisplayGui() {}
-
+	WarningDisplayGui() {}
 	size_t base_height = 128;
-
-    virtual tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("FPSLocker", getStringID(Lang::Id_DisplaySettingsWarning));
-
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, "DisplaySettingWarningWarningDisplayGuiOverlayFrame"_tr);
 		auto list = new tsl::elm::List();
-
 		auto how_many_lines = 1 + std::ranges::count(Warning, '\n');
-
 		list->addItem(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
 			renderer->drawString(Warning.c_str(), false, x, y+20, 20, renderer->a(0xFFFF));
 		}), 10 + (how_many_lines * 20));
-
-		auto *clickableListItem1 = new tsl::elm::ListItem2(getStringID(Lang::Id_Decline));
+		auto *clickableListItem1 = new tsl::elm::ListItem2("DeclineWarningDisplayGuiListItem"_tr);
 		clickableListItem1->setClickListener([this](u64 keys) { 
 			if (keys & HidNpadButton_A) {
 				tsl::goBack();
@@ -1108,10 +1068,8 @@ public:
 			}
 			return false;
 		});
-
 		list->addItem(clickableListItem1);
-
-		auto *clickableListItem2 = new tsl::elm::ListItem2(getStringID(Lang::Id_Accept));
+		auto *clickableListItem2 = new tsl::elm::ListItem2("AcceptWarningDisplayGuiListItem"_tr);
 		clickableListItem2->setClickListener([this](u64 keys) { 
 			if ((keys & HidNpadButton_A)) {
 				tsl::goBack();
@@ -1120,11 +1078,9 @@ public:
 			}
 			return false;
 		});
-
 		list->addItem(clickableListItem2);
 		
 		frame->setContent(list);
-
-        return frame;
-    }
+		return frame;
+	}
 };
