@@ -471,7 +471,7 @@ void downloadPatch(void*) {
 				if (temp_error_code == 0x404) valid = 0;
 				else if (temp_error_code == 0x312) valid = 2;
 				else valid = 3;
-				snprintf(link, sizeof(link), m_template, macro_id, TID, BID, version, display_version_converted, valid, *(uint64_t*)(mem.addr + 64), APP_VERSION);
+				snprintf(link, sizeof(link), m_template, macro_id, TID, BID, version, display_version_converted, valid, *(uint64_t*)(mem.addr + 64), VERSION);
 				curl_free(display_version_converted);
 				curl_free(app_version_converted);
 
