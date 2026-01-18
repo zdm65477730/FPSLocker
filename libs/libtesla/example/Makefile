@@ -37,37 +37,34 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   of a homebrew executable (.nro). This is intended to be used for sysmodules.
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
-APP_TITLE	:=	FPSLocker
-APP_VERSION	:=	v3.2.3
 
-ifeq ($(RELEASE),)
-	APP_VERSION	:=	$(APP_VERSION)-$(shell git describe --always)
-endif
+APP_TITLE			:=		Tesla Example
+APP_VERSION 	:= 		1.3.0
 
-TARGET		:=	$(APP_TITLE)
+TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/c4 source/c4/yml source/asmjit/arm source/asmjit/core
+SOURCES		:=	source
 DATA		:=	data
-INCLUDES	:=	include ../libs/libtesla/include source
+INCLUDES	:=	../include
 
 NO_ICON		:=  1
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH		:= -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -flto=auto
+ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
-CFLAGS		:= -g -Wall -O2 -ffunction-sections -fdata-sections \
+CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 			$(ARCH) $(DEFINES)
 
-CFLAGS		+= $(INCLUDE) -D__SWITCH__ -DAPPTITLE="\"$(APP_TITLE)\"" -DVERSION="\"$(APP_VERSION)\"" -DNDEBUG -DASMJIT_EMBED -DASMJIT_BUILD_RELEASE -DASMJIT_NO_X86 -DASMJIT_NO_DEPRECATED -DASMJIT_NO_ABI_NAMESPACE -DASMJIT_NO_JIT -DASMJIT_NO_LOGGING -DASMJIT_NO_VALIDATION
+CFLAGS	+=	$(INCLUDE) -D__SWITCH__
 
-CXXFLAGS	:= $(CFLAGS) -fexceptions -std=c++23
+CXXFLAGS	:= $(CFLAGS) -fno-exceptions -std=c++20
 
-ASFLAGS		:= -g $(ARCH)
-LDFLAGS		= -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+ASFLAGS	:=	-g $(ARCH)
+LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS		:= `curl-config --libs`
+LIBS	:= -lnx
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -112,14 +109,14 @@ endif
 
 export OFILES_BIN	:=	$(addsuffix .o,$(BINFILES))
 export OFILES_SRC	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
-export OFILES		:=	$(OFILES_BIN) $(OFILES_SRC)
+export OFILES 	:=	$(OFILES_BIN) $(OFILES_SRC)
 export HFILES_BIN	:=	$(addsuffix .h,$(subst .,_,$(BINFILES)))
 
-export INCLUDE		:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 			-I$(CURDIR)/$(BUILD)
 
-export LIBPATHS		:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
 ifeq ($(strip $(CONFIG_JSON)),)
 	jsons := $(wildcard *.json)
@@ -131,7 +128,7 @@ ifeq ($(strip $(CONFIG_JSON)),)
 		endif
 	endif
 else
-	export APP_JSON	:= $(TOPDIR)/$(CONFIG_JSON)
+	export APP_JSON := $(TOPDIR)/$(CONFIG_JSON)
 endif
 
 ifeq ($(strip $(ICON)),)
@@ -148,11 +145,11 @@ else
 endif
 
 ifeq ($(strip $(NO_ICON)),)
-	export NROFLAGS	+= --icon=$(APP_ICON)
+	export NROFLAGS += --icon=$(APP_ICON)
 endif
 
 ifeq ($(strip $(NO_NACP)),)
-	export NROFLAGS	+= --nacp=$(CURDIR)/$(TARGET).nacp
+	export NROFLAGS += --nacp=$(CURDIR)/$(TARGET).nacp
 endif
 
 ifneq ($(APP_TITLEID),)
@@ -187,20 +184,20 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-all		: $(OUTPUT).ovl
+all	:	 $(OUTPUT).ovl
 
-$(OUTPUT).ovl	: $(OUTPUT).elf $(OUTPUT).nacp 
+$(OUTPUT).ovl		:	$(OUTPUT).elf $(OUTPUT).nacp 
 	@elf2nro $< $@ $(NROFLAGS)
 	@echo "built ... $(notdir $(OUTPUT).ovl)"
 
-$(OUTPUT).elf	: $(OFILES)
+$(OUTPUT).elf	:	$(OFILES)
 
 $(OFILES_SRC)	: $(HFILES_BIN)
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data
 #---------------------------------------------------------------------------------
-%.bin.o	%_bin.h	: %.bin
+%.bin.o	%_bin.h :	%.bin
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	@$(bin2o)

@@ -20,10 +20,14 @@
 #pragma once
 
 #include <switch.h>
+#include <json.hpp>
 
 #include <stdlib.h>
 #include <strings.h>
 #include <math.h>
+#include <unordered_map>
+#include <fstream>
+#include <filesystem>
 
 #include <algorithm>
 #include <cstring>
@@ -37,7 +41,7 @@
 #include <list>
 #include <stack>
 #include <map>
-#include <filesystem>
+
 
 // Define this makro before including tesla.hpp in your main file. If you intend
 // to use the tesla.hpp header in more than one source file, only define it once!
@@ -70,6 +74,24 @@
         }                               \
     })
 
+#if defined(BUILD_ZING)
+u8 TeslaFPS = 60;
+bool IsFrameBackground = true;
+bool FullMode = true;
+uint16_t framebufferWidth = 448;
+uint16_t framebufferHeight = 720;
+bool deactivateOriginalFooter = false;
+
+PadState pad;
+#endif
+
+#ifdef BUILD_ZING
+typedef struct {
+    u32 A = 0, B = 0;                                   ///< UniquePadId
+} Breeze_state;
+Breeze_state Bstate = {};
+#endif
+
 using namespace std::literals::string_literals;
 using namespace std::literals::chrono_literals;
 
@@ -81,6 +103,10 @@ namespace tsl {
 
         constexpr u32 ScreenWidth = 1920;       ///< Width of the Screen
         constexpr u32 ScreenHeight = 1080;      ///< Height of the Screen
+#if defined(BUILD_ZING)
+        constexpr u32 LayerMaxWidth = 1280;
+        constexpr u32 LayerMaxHeight = 720;
+#endif
 
         extern u16 LayerWidth;                  ///< Width of the Tesla layer
         extern u16 LayerHeight;                 ///< Height of the Tesla layer
@@ -88,7 +114,6 @@ namespace tsl {
         extern u16 LayerPosY;                   ///< Y position of the Tesla layer
         extern u16 FramebufferWidth;            ///< Width of the framebuffer
         extern u16 FramebufferHeight;           ///< Height of the framebuffer
-        extern u16 FramebufferWidthForSwizzling;
         extern u64 launchCombo;                 ///< Overlay activation key combo
 
     }
@@ -497,6 +522,153 @@ namespace tsl {
 
     }
 
+    namespace tr {
+        namespace {
+            constexpr auto DefaultUnknownString = "???";
+
+            using LanguageStrings = std::map<std::string, std::string>;
+            LanguageStrings g_SystemLanguageStrings;
+            std::string g_baseLang{"None"};
+
+            Result GetSysBaseLang(std::string &sysBaseLang) {
+                if (g_baseLang != "None") {
+                    sysBaseLang = g_baseLang;
+                    return 0;
+                }
+
+                Result rc;
+                if(R_SUCCEEDED(rc = setInitialize())) {
+                    u64 languageCode;
+                    if (R_SUCCEEDED(rc = setGetSystemLanguage(&languageCode))) {
+                        SetLanguage language{SetLanguage_ENUS};
+                        if (R_SUCCEEDED(rc = setMakeLanguage(languageCode, &language))) {
+                            switch (language) {
+                            case SetLanguage_JA:
+                                g_baseLang = "ja";
+                                break;
+                            case SetLanguage_ENUS:
+                            case SetLanguage_ENGB:
+                                g_baseLang = "en";
+                                break;
+                            case SetLanguage_FR:
+                            case SetLanguage_FRCA:
+                                g_baseLang = "fr";
+                                break;
+                            case SetLanguage_DE:
+                                g_baseLang = "de";
+                                break;
+                            case SetLanguage_IT:
+                                g_baseLang = "it";
+                                break;
+                            case SetLanguage_ES:
+                            case SetLanguage_ES419:
+                                g_baseLang = "es";
+                                break;
+                            case SetLanguage_ZHCN:
+                            case SetLanguage_ZHHANS:
+                                g_baseLang = "zh-Hans";
+                                break;
+                            case SetLanguage_KO:
+                                g_baseLang = "ko";
+                                break;
+                            case SetLanguage_NL:
+                                g_baseLang = "nl";
+                                break;
+                            case SetLanguage_PT:
+                            case SetLanguage_PTBR:
+                                g_baseLang = "pt";
+                                break;
+                            case SetLanguage_RU:
+                                g_baseLang = "ru";
+                                break;
+                            case SetLanguage_ZHTW:
+                            case SetLanguage_ZHHANT:
+                                g_baseLang = "zh-Hant";
+                                break;
+                            default:
+                                g_baseLang = "en";
+                                break;
+                            }
+                        }
+                    }
+                    setExit();
+                }
+
+                sysBaseLang = g_baseLang;
+                return rc;
+            }
+
+            void fillLangStrings(nlohmann::json &json, LanguageStrings &out_strs) {
+                if(!json.empty()) {
+                    for(auto item : json.items()) {
+                        out_strs[item.key()] = item.value();
+                    }
+                }
+            }
+
+            bool LoadLanguageStrings(std::string &langPath, std::string &lang, LanguageStrings &out_strs) {
+                std::string langFilePath = langPath + lang + ".json";
+                if (!std::filesystem::exists(langFilePath)) return true;
+
+                bool ok = false;
+                try {
+                    std::ifstream ifs(langFilePath);
+                    auto lang_json = nlohmann::json::parse(ifs);
+                    fillLangStrings(lang_json, out_strs);
+                    ok = true;
+                }
+                catch(std::exception&) {
+                    ok = false;
+                }
+                return ok;
+            }
+
+            bool LoadTrans(std::string &langPath, LanguageStrings &out_strs) {
+                bool ok = false;
+                std::string base_lang;
+                if (R_SUCCEEDED(GetSysBaseLang(base_lang))) {
+                    ok = LoadLanguageStrings(langPath, base_lang, out_strs);
+                }
+
+                return ok;
+            }
+
+            std::string Translate(const std::string &key) {
+                if(g_SystemLanguageStrings.count(key)) {
+                    return g_SystemLanguageStrings.at(key);
+                } else {
+                    return DefaultUnknownString;
+                }
+            }
+        }
+
+        inline Result GetSysBaseLanguage(std::string &base_lang) {
+            return GetSysBaseLang(base_lang);
+        }
+
+        /* call within tsl::hlp::doWithSDCardHandle([&]() {} */
+        inline bool InitTrans(std::string &langPath, std::string &defaultTrans) {
+            if (!std::filesystem::exists(langPath)) return false;
+            if (!defaultTrans.size()) return false;
+
+            bool ok = false;
+            try {
+                if (g_SystemLanguageStrings.empty()) {
+                    auto lang_json = nlohmann::json::parse(defaultTrans);
+                    fillLangStrings(lang_json, g_SystemLanguageStrings);
+                    ok = LoadTrans(langPath, g_SystemLanguageStrings);
+                }
+            } catch(std::exception&) {
+                ok = false;
+            }
+            return ok;
+        }
+    }
+
+    inline std::string operator ""_tr(const char *key_lit, size_t key_lit_size) {
+        return tr::Translate(std::string(key_lit, key_lit_size));
+    }
+
     // Renderer
 
     namespace gfx {
@@ -512,6 +684,9 @@ namespace tsl {
          */
         class Renderer final {
         public:
+#ifdef BUILD_ZING
+            s32 m_maxX = 0, m_maxY= 0;
+#endif
             Renderer& operator=(Renderer&) = delete;
 
             friend class tsl::Overlay;
@@ -650,6 +825,133 @@ namespace tsl {
                         this->setPixelBlendDst(x1, y1, color);
             }
 
+            /**
+             * @brief Draws a rectangle of given sizes with empty filling
+             *
+             * @param x X pos
+             * @param y Y pos
+             * @param w Width
+             * @param h Height
+             * @param color Color
+             */
+            inline void drawEmptyRect(s32 x, s32 y, s32 w, s32 h, Color color) {
+                if (x < 0 || y < 0 || x >= cfg::FramebufferWidth || y >= cfg::FramebufferHeight)
+                    return;
+
+                for (s32 x1 = x; x1 <= (x + w); x1++)
+                    for (s32 y1 = y; y1 <= (y + h); y1++)
+                        if (y1 == y || x1 == x || y1 == y + h || x1 == x + w)
+                            this->setPixelBlendDst(x1, y1, color);
+            }
+
+            /**
+             * @brief Draws a line
+             *
+             * @param x0 Start X pos
+             * @param y0 Start Y pos
+             * @param x1 End X pos
+             * @param y1 End Y pos
+             * @param color Color
+             */
+            inline void drawLine(s32 x0, s32 y0, s32 x1, s32 y1, Color color) {
+                if ((x0 == x1) && (y0 == y1)) {
+                    this->setPixelBlendDst(x0, y0, color);
+                    return;
+                }
+
+                s32 x_max = std::max(x0, x1);
+                s32 y_max = std::max(y0, y1);
+                s32 x_min = std::min(x0, x1);
+                s32 y_min = std::min(y0, y1);
+
+                if (x_min < 0 || y_min < 0 || x_min >= cfg::FramebufferWidth || y_min >= cfg::FramebufferHeight)
+                    return;
+
+                // y = mx + b
+                s32 dy = y_max - y_min;
+                s32 dx = x_max - x_min;
+
+                if (dx == 0) {
+                    for (s32 y = y_min; y <= y_max; y++) {
+                        this->setPixelBlendDst(x_min, y, color);
+                    }
+                    return;
+                }
+
+                float m = (float)dy / float(dx);
+                float b = y_min - (m * x_min);
+
+                for (s32 x = x_min; x <= x_max; x++) {
+                    s32 y = std::lround((m * (float)x) + b);
+                    s32 y_end = std::lround((m * (float)(x+1)) + b);
+                    if (y == y_end) {
+                        if (x <= x_max && y <= y_max)
+                            this->setPixelBlendDst(x, y, color);
+                    } else while (y < y_end) {
+                        if (x <= x_max && y <= y_max)
+                            this->setPixelBlendDst(x, y, color);
+                        y += 1;
+                    }
+                }
+            }
+
+            /**
+             * @brief Draws a dashed line
+             *
+             * @param x0 Start X pos
+             * @param y0 Start Y pos
+             * @param x1 End X pos
+             * @param y1 End Y pos
+             * @param line_width How long one line can be
+             * @param color Color
+             */
+            inline void drawDashedLine(s32 x0, s32 y0, s32 x1, s32 y1, s32 line_width, Color color) {
+                // Source of formula: https://www.cc.gatech.edu/grads/m/Aaron.E.McClennen/Bresenham/code.html
+
+                s32 x_min = std::min(x0, x1);
+                s32 x_max = std::max(x0, x1);
+                s32 y_min = std::min(y0, y1);
+                s32 y_max = std::max(y0, y1);
+
+                if (x_min < 0 || y_min < 0 || x_min >= cfg::FramebufferWidth || y_min >= cfg::FramebufferHeight)
+                    return;
+
+                s32 dx = x_max - x_min;
+                s32 dy = y_max - y_min;
+                s32 d = 2 * dy - dx;
+                s32 incrE = 2*dy;
+                s32 incrNE = 2*(dy - dx);
+
+                this->setPixelBlendDst(x_min, y_min, color);
+
+                s32 x = x_min;
+                s32 y = y_min;
+                s32 rendered = 0;
+
+                while(x < x1) {
+                    if (d <= 0) {
+                        d += incrE;
+                        x++;
+                    }
+                    else {
+                        d += incrNE;
+                        x++;
+                        y++;
+                    }
+                    rendered++;
+                    if (x < 0 || y < 0 || x >= cfg::FramebufferWidth || y >= cfg::FramebufferHeight)
+                        continue;
+                    if (x <= x_max && y <= y_max) {
+                        if (rendered > 0 && rendered < line_width) {
+                            this->setPixelBlendDst(x, y, color);
+                        }
+                        else if (rendered > 0 && rendered >= line_width) {
+                            rendered *= -1;
+                        }
+                    }
+                }
+            }
+
             void drawCircle(s32 centerX, s32 centerY, u16 radius, bool filled, Color color) {
                 s32 x = radius;
                 s32 y = 0;
@@ -785,7 +1087,11 @@ namespace tsl {
                         maxX = std::max(currX, maxX);
 
                         currX = x;
+#ifndef BUILD_ZING
                         currY += fontSize;
+#else
+                        currY += fontSize+3;
+#endif
 
                         continue;
                     }
@@ -845,6 +1151,11 @@ namespace tsl {
 
                 maxX = std::max(currX, maxX);
 
+#ifdef BUILD_ZING
+                m_maxX = std::max(m_maxX, maxX);
+                m_maxY = std::max(m_maxY, currY);
+#endif
+
                 return { maxX - x, currY - y };
             }
 
@@ -895,6 +1206,14 @@ namespace tsl {
                 return string;
             }
 
+            /**
+             * @brief Get the main frame button display string
+             *
+             * @return Main button display text
+             */
+            std::string getMainFrameButtonText() {
+                return this->m_MainFrameButtonText;
+            }
         private:
             Renderer() {}
 
@@ -920,6 +1239,10 @@ namespace tsl {
                 Renderer::s_opacity = opacity;
             }
 
+            /**
+             * @brief Main frame button text
+             */
+            std::string m_MainFrameButtonText{"\uE0E1  Back     \uE0E0  OK"};
             bool m_initialized = false;
             ViDisplay m_display;
             ViLayer m_layer;
@@ -1007,25 +1330,37 @@ namespace tsl {
              */
             inline u32 getPixelOffset(s32 x, s32 y) {
                 if (!this->m_scissoringStack.empty()) {
-                    auto currScissorConfig = this->m_scissoringStack.top();
-                    if (x < currScissorConfig.x ||
-                        y < currScissorConfig.y ||
-                        x > currScissorConfig.x + currScissorConfig.w ||
-                        y > currScissorConfig.y + currScissorConfig.h)
-                            return UINT32_MAX;
+                    // Optimization 1: The clipping check uses unsigned difference comparison (reducing 4 comparisons to 2).
+                    const auto& curr = this->m_scissoringStack.top();
+                    u32 dx = static_cast<u32>(x - curr.x);
+                    u32 dy = static_cast<u32>(y - curr.y);
+                    if (dx > static_cast<u32>(curr.w) || 
+                        dy > static_cast<u32>(curr.h)) {
+                        return UINT32_MAX;
+                    }
                 }
-                if (x < 0 || y < 0) return UINT32_MAX;
 
-                //Optimization trick to make it faster
-                u32 x_impl = (u32)x;
-                u32 y_impl = (u32)y;
+                // Optimization 2: Fully implemented with bitwise operations (eliminates all division/modulo operations)
+                //u32 tmpPos = ((y & 127) / 16) + (x / 32 * 8) + ((y / 16 / 8) * (((cfg::FramebufferWidth / 2) / 16 * 8)));
 
-                u32 tmpPos = ((y_impl & 127) / 16) + (x_impl / 32 * 8) + ((y_impl / 16 / 8) * cfg::FramebufferWidthForSwizzling);
-                tmpPos *= 16 * 16 * 4;
+                // Constant precomputation (optimized by the compiler)
+                constexpr u32 y_mask = 0x7F;  // 127
+                // High-order bit calculation (equivalent to the original tmpPos*512)
+                u32 highPart = ((y & y_mask) >> 4) + ((x >> 2) & 0xFFFFFFF8) + ((y >> 7) * ((cfg::FramebufferWidth / 2) / 16 * 8)); // ((y / 16 / 8)
 
-                tmpPos += ((y_impl % 16) / 8) * 512 + ((x_impl % 32) / 16) * 256 + ((y_impl % 8) / 2) * 64 + ((x_impl % 16) / 8) * 32 + (y_impl % 2) * 16 + (x_impl % 8) * 2;
+                //tmpPos *= 16 * 16 * 4;
+                highPart <<= 9;  // tmpPos *= 16 * 16 * 4;
 
-                return tmpPos / 2;
+                // Low-order bit calculation (equivalent to the original B/2)
+                //tmpPos += ((y % 16) / 8) * 512 + ((x % 32) / 16) * 256 + ((y % 8) / 2) * 64 + ((x % 16) / 8) * 32 + (y % 2) * 16 + (x % 8) * 2;
+                u32 lowPart = (((y >> 3) & 0x1) << 8)   // ((y%16)/8)*256
+                            | (((x >> 4) & 0x1) << 7)   // ((x%32)/16)*128
+                            | (((y >> 1) & 0x3) << 5)   // ((y%8)/2)*32
+                            | (((x >> 3) & 0x1) << 4)   // ((x%16)/8)*16
+                            | (((y     ) & 0x1) << 3)   // (y%2)*8
+                            | (x & 0x7);
+                //return tmpPos / 2;
+                return highPart | lowPart;
             }
 
             /**
@@ -1036,11 +1371,17 @@ namespace tsl {
 
                 cfg::LayerPosX = 0;
                 cfg::LayerPosY = 0;
+#if !defined(BUILD_ZING)
                 cfg::FramebufferWidth  = 448;
                 cfg::FramebufferHeight = 720;
                 cfg::LayerWidth  = cfg::ScreenHeight * (float(cfg::FramebufferWidth) / float(cfg::FramebufferHeight));
                 cfg::LayerHeight = cfg::ScreenHeight;
-                cfg::FramebufferWidthForSwizzling = (cfg::FramebufferWidth / 2) / 16 * 8;
+#else
+                cfg::FramebufferWidth = framebufferWidth;
+                cfg::FramebufferHeight = framebufferHeight;
+                cfg::LayerWidth  = cfg::ScreenWidth * (float(cfg::FramebufferWidth) / float(cfg::LayerMaxWidth));
+                cfg::LayerHeight = cfg::ScreenHeight * (float(cfg::FramebufferHeight) / float(cfg::LayerMaxHeight));
+#endif
 
                 if (this->m_initialized)
                     return;
@@ -1070,9 +1411,7 @@ namespace tsl {
                     ASSERT_FATAL(viSetLayerPosition(&this->m_layer, cfg::LayerPosX, cfg::LayerPosY));
                     ASSERT_FATAL(nwindowCreateFromLayer(&this->m_window, &this->m_layer));
                     ASSERT_FATAL(framebufferCreate(&this->m_framebuffer, &this->m_window, cfg::FramebufferWidth, cfg::FramebufferHeight, PIXEL_FORMAT_RGBA_4444, 2));
-                    ASSERT_FATAL(setInitialize());
                     ASSERT_FATAL(this->initFonts());
-                    setExit();
                 });
 
                 this->m_initialized = true;
@@ -1108,40 +1447,82 @@ namespace tsl {
                 u8 *fontBuffer = reinterpret_cast<u8*>(stdFontData.address);
                 stbtt_InitFont(&this->m_stdFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
 
-                u64 languageCode;
-                if (R_SUCCEEDED(setGetSystemLanguage(&languageCode))) {
-                    // Check if need localization font
-                    SetLanguage setLanguage;
-                    TSL_R_TRY(setMakeLanguage(languageCode, &setLanguage));
-                    this->m_hasLocalFont = true;
-                    switch (setLanguage) {
-                    case SetLanguage_ZHCN:
-                    case SetLanguage_ZHHANS:
-                        TSL_R_TRY(plGetSharedFontByType(&localFontData, PlSharedFontType_ChineseSimplified));
-                        break;
-                    case SetLanguage_KO:
-                        TSL_R_TRY(plGetSharedFontByType(&localFontData, PlSharedFontType_KO));
-                        break;
-                    case SetLanguage_ZHTW:
-                    case SetLanguage_ZHHANT:
-                        TSL_R_TRY(plGetSharedFontByType(&localFontData, PlSharedFontType_ChineseTraditional));
-                        break;
-                    default:
-                        this->m_hasLocalFont = false;
-                        break;
-                    }
-
-                    if (this->m_hasLocalFont) {
-                        fontBuffer = reinterpret_cast<u8*>(localFontData.address);
-                        stbtt_InitFont(&this->m_localFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
-                    }
-                }
-
                 // Nintendo's extended font containing a bunch of icons
                 TSL_R_TRY(plGetSharedFontByType(&extFontData, PlSharedFontType_NintendoExt));
 
                 fontBuffer = reinterpret_cast<u8*>(extFontData.address);
                 stbtt_InitFont(&this->m_extFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+
+                if(R_SUCCEEDED(setInitialize())) {
+                    u64 languageCode;
+                    this->m_hasLocalFont = false;
+                    if (R_SUCCEEDED(setGetSystemLanguage(&languageCode))) {
+                        SetLanguage setLanguage{SetLanguage_ENUS};
+                        if (R_SUCCEEDED(setMakeLanguage(languageCode, &setLanguage))) {
+                            switch (setLanguage) {
+                            case SetLanguage_JA:
+                                    this->m_MainFrameButtonText = "\uE0E1  戻る     \uE0E0  確認";
+                                break;
+                            case SetLanguage_ENUS:
+                            case SetLanguage_ENGB:
+                                    this->m_MainFrameButtonText = "\uE0E1  Back     \uE0E0  OK";
+                                break;
+                            case SetLanguage_FR:
+                            case SetLanguage_FRCA:
+                                    this->m_MainFrameButtonText = "\uE0E1  Retour     \uE0E0  Confirmation";
+                                break;
+                            case SetLanguage_DE:
+                                    this->m_MainFrameButtonText = "\uE0E1  Zurück     \uE0E0  Bestätigen";
+                                break;
+                            case SetLanguage_IT:
+                                    this->m_MainFrameButtonText = "\uE0E1  Ritorno     \uE0E0  Conferma";
+                                break;
+                            case SetLanguage_ES:
+                            case SetLanguage_ES419:
+                                    this->m_MainFrameButtonText = "\uE0E1  Return     \uE0E0  Confirmar";
+                                break;
+                            case SetLanguage_ZHCN:
+                            case SetLanguage_ZHHANS:
+                                if(R_SUCCEEDED(plGetSharedFontByType(&localFontData, PlSharedFontType_ChineseSimplified))) {
+                                    this->m_hasLocalFont = true;
+                                    this->m_MainFrameButtonText = "\uE0E1  返回     \uE0E0  确认";
+                                }
+                                break;
+                            case SetLanguage_KO:
+                                if(R_SUCCEEDED(plGetSharedFontByType(&localFontData, PlSharedFontType_KO))) {
+                                    this->m_hasLocalFont = true;
+                                    this->m_MainFrameButtonText = "\uE0E1  뒤로     \uE0E0  확인";
+                                }
+                                break;
+                            case SetLanguage_NL:
+                                    this->m_MainFrameButtonText = "\uE0E1  Terugkeer     \uE0E0  Bevestigen";
+                                break;
+                            case SetLanguage_PT:
+                            case SetLanguage_PTBR:
+                                    this->m_MainFrameButtonText = "\uE0E1  Retorno     \uE0E0  Confirmar";
+                                break;
+                            case SetLanguage_RU:
+                                    this->m_MainFrameButtonText = "\uE0E1  возвращение      \uE0E0  подтверждение ";
+                                break;
+                            case SetLanguage_ZHTW:
+                            case SetLanguage_ZHHANT:
+                                if(R_SUCCEEDED(plGetSharedFontByType(&localFontData, PlSharedFontType_ChineseTraditional))) {
+                                    this->m_hasLocalFont = true;
+                                    this->m_MainFrameButtonText = "\uE0E1  返回     \uE0E0  確認";
+                                }
+                                break;
+                            default:
+                                this->m_hasLocalFont = false;
+                                break;
+                            }
+                            if (this->m_hasLocalFont) {
+                                fontBuffer = reinterpret_cast<u8*>(localFontData.address);
+                                stbtt_InitFont(&this->m_localFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+                            }
+                        }
+                    }
+                    setExit();
+                }
 
                 return 0;
             }
@@ -1163,6 +1544,34 @@ namespace tsl {
                 framebufferEnd(&this->m_framebuffer);
 
                 this->m_currentFramebuffer = nullptr;
+            }
+
+            /**
+             * @brief Draws a single font glyph
+             *
+             * @param codepoint Unicode codepoint to draw
+             * @param x X pos
+             * @param y Y pos
+             * @param color Color
+             * @param font STB Font to use
+             * @param fontSize Font size
+             */
+            inline void drawGlyph(s32 codepoint, s32 x, s32 y, Color color, stbtt_fontinfo *font, float fontSize) {
+                int width = 10, height = 10;
+
+                u8 *glyphBmp = stbtt_GetCodepointBitmap(font, fontSize, fontSize, codepoint, &width, &height, nullptr, nullptr);
+
+                if (glyphBmp == nullptr)
+                    return;
+
+                for (s16 bmpY = 0; bmpY < height; bmpY++) {
+                    for (s16 bmpX = 0; bmpX < width; bmpX++) {
+                        Color tmpColor = color;
+                        tmpColor.a = (glyphBmp[width * bmpY + bmpX] >> 4) * (float(tmpColor.a) / 0xF);
+                        this->setPixelBlendSrc(x + bmpX, y + bmpY, tmpColor);
+                    }
+                }
+                std::free(glyphBmp);
             }
         };
 
@@ -1187,7 +1596,7 @@ namespace tsl {
         public:
             Element() {}
             virtual ~Element() { }
-
+   
             /**
              * @brief Handles focus requesting
              * @note This function should return the element to focus.
@@ -1567,7 +1976,6 @@ namespace tsl {
             std::function<void(gfx::Renderer*, s32 x, s32 y, s32 w, s32 h)> m_renderFunc;
         };
 
-        std::string buttons = "\uE0E1  Back     \uE0E0  OK";
 
         /**
          * @brief The base frame which can contain another view
@@ -1588,16 +1996,34 @@ namespace tsl {
             }
 
             virtual void draw(gfx::Renderer *renderer) override {
+#if !defined(BUILD_ZING)
                 renderer->fillScreen(a(tsl::style::color::ColorFrameBackground));
                 renderer->drawRect(tsl::cfg::FramebufferWidth - 1, 0, 1, tsl::cfg::FramebufferHeight, a(0xF222));
+#else
+                renderer->fillScreen(a(IsFrameBackground ? tsl::style::color::ColorFrameBackground : tsl::style::color::ColorTransparent));
+#endif
 
-                renderer->drawString(this->m_title.c_str(), false, 20, 50, 30, a(tsl::style::color::ColorText));
-                renderer->drawString(this->m_subtitle.c_str(), false, 20, 70, 15, a(tsl::style::color::ColorDescription));
+                if (!this->m_title.empty())
+                    renderer->drawString(this->m_title.c_str(), false, 20, 50, 30, a(tsl::style::color::ColorText));
 
+                if (!this->m_subtitle.empty())
+#if defined(BUILD_ZING)
+                    renderer->drawString(this->m_subtitle.c_str(), false, 20, 70, 15, a(tsl::style::color::ColorText));
+#else
+                    renderer->drawString(this->m_subtitle.c_str(), false, 20, 70, 15, a(tsl::style::color::ColorDescription));
+#endif
+
+#if defined(BUILD_ZING)
+                if (FullMode == true) renderer->drawRect(15, tsl::cfg::FramebufferHeight - 73, tsl::cfg::FramebufferWidth - 30, 1, a(tsl::style::color::ColorText));
+#else
                 renderer->drawRect(15, tsl::cfg::FramebufferHeight - 73, tsl::cfg::FramebufferWidth - 30, 1, a(tsl::style::color::ColorText));
+#endif
 
-                renderer->drawString(buttons.c_str(), false, 30, 693, 23, a(tsl::style::color::ColorText));
-
+#if defined(BUILD_ZING)
+                if (!deactivateOriginalFooter) renderer->drawString(renderer->getMainFrameButtonText().c_str(), false, 30, 693, 23, a(tsl::style::color::ColorText));
+#else
+                renderer->drawString(renderer->getMainFrameButtonText().c_str(), false, 30, 693, 23, a(tsl::style::color::ColorText));
+#endif
                 if (this->m_contentElement != nullptr)
                     this->m_contentElement->frame(renderer);
             }
@@ -1606,7 +2032,14 @@ namespace tsl {
                 this->setBoundaries(parentX, parentY, parentWidth, parentHeight);
 
                 if (this->m_contentElement != nullptr) {
+#if defined(BUILD_ZING)
+                    if ( this->m_title.empty() && this->m_subtitle.empty())
+                        this->m_contentElement->setBoundaries(parentX, parentY, parentWidth - 30, parentHeight);
+                    else
+                        this->m_contentElement->setBoundaries(parentX + 15, parentY + 100, parentWidth - 70, parentHeight - 73); // CUSTOM MODIFICATION
+#else
                     this->m_contentElement->setBoundaries(parentX + 35, parentY + 125, parentWidth - 85, parentHeight - 73 - 125);
+#endif
                     this->m_contentElement->invalidate();
                 }
             }
@@ -1690,7 +2123,7 @@ namespace tsl {
 
                 renderer->drawRect(15, tsl::cfg::FramebufferHeight - 73, tsl::cfg::FramebufferWidth - 30, 1, a(tsl::style::color::ColorText));
 
-                renderer->drawString("\uE0E1  Back     \uE0E0  OK", false, 30, 693, 23, a(tsl::style::color::ColorText));
+                renderer->drawString(renderer->getMainFrameButtonText().c_str(), false, 30, 693, 23, a(tsl::style::color::ColorText));
 
                 if (this->m_header != nullptr)
                     this->m_header->frame(renderer);
@@ -1807,6 +2240,7 @@ namespace tsl {
              *
              */
             List() : Element() {}
+
             virtual ~List() {
                 for (auto& item : this->m_items)
                     delete item;
@@ -2128,8 +2562,8 @@ namespace tsl {
              *
              * @param text Initial description text
              */
-            ListItem(const std::string& text, const std::string& value = "")
-                : Element(), m_text(text), m_value(value) {
+            ListItem(const std::string& text, const std::string& value = "", Color value_color = style::color::ColorHighlight, Color faint_color = style::color::ColorDescription)
+                : Element(), m_text(text), m_value(value), m_value_color{value_color}, m_faint_color{faint_color} {
             }
             virtual ~ListItem() {}
 
@@ -2185,7 +2619,7 @@ namespace tsl {
                     renderer->drawString(this->m_text.c_str(), false, this->getX() + 20, this->getY() + 45, 23, a(tsl::style::color::ColorText));
                 }
 
-                renderer->drawString(this->m_value.c_str(), false, this->getX() + this->m_maxWidth + 45, this->getY() + 45, 20, this->m_faint ? a(tsl::style::color::ColorDescription) : a(tsl::style::color::ColorHighlight));
+                renderer->drawString(this->m_value.c_str(), false, this->getX() + this->m_maxWidth + 45, this->getY() + 45, 20, this->m_faint ? a(m_faint_color) : a(m_value_color));
             }
 
             virtual void layout(u16 parentX, u16 parentY, u16 parentWidth, u16 parentHeight) override {
@@ -2258,6 +2692,24 @@ namespace tsl {
             }
 
             /**
+             * @brief Sets the value color
+             *
+             * @param value_color color of the value
+             */
+            inline void setValueColor(Color value_color) {
+                this->m_value_color = value_color;
+            }
+
+            /**
+             * @brief Sets the faint color
+             *
+             * @param faint_color color of the faint
+             */
+            inline void setFaintColor(Color faint_color) {
+                this->m_faint_color = faint_color;
+            }
+
+            /**
              * @brief Gets the left hand description text of the list item
              *
              * @return Text
@@ -2280,6 +2732,9 @@ namespace tsl {
             std::string m_value = "";
             std::string m_scrollText = "";
             std::string m_ellipsisText = "";
+
+            Color m_value_color;
+            Color m_faint_color;
 
             bool m_scroll = false;
             bool m_trunctuated = false;
@@ -2308,7 +2763,7 @@ namespace tsl {
              * @param onValue Value drawn if the toggle is on
              * @param offValue Value drawn if the toggle is off
              */
-            ToggleListItem(const std::string& text, bool initialState, const std::string& onValue = "On", const std::string& offValue = "Off")
+            ToggleListItem(const std::string& text, bool initialState, const std::string& onValue = "\uE14B", const std::string& offValue = "\uE14C")
                 : ListItem(text), m_state(initialState), m_onValue(onValue), m_offValue(offValue) {
 
                 this->setState(this->m_state);
@@ -3232,7 +3687,6 @@ namespace tsl {
                     if (initialTouchPos.x < 150U && initialTouchPos.y > cfg::FramebufferHeight - 73U)
                         if (!currentGui->handleInput(HidNpadButton_B, 0,{},{},{}))
                             this->goBack();
-
                 elm::Element::setInputMode(InputMode::Controller);
 
                 oldTouchPos = { 0 };
@@ -3329,7 +3783,6 @@ namespace tsl {
         friend class tsl::Gui;
     };
 
-
     namespace impl {
 
         /**
@@ -3405,7 +3858,10 @@ namespace tsl {
             padConfigureInput(8, HidNpadStyleSet_NpadStandard | HidNpadStyleTag_NpadSystemExt);
 
             // Initialize pad
-            PadState pad;
+#if !defined(BUILD_ZING)
+             PadState pad;
+#endif
+
             padInitializeAny(&pad);
 
             // Initialize touch screen
@@ -3464,7 +3920,6 @@ namespace tsl {
                         tsl::Overlay::get()->hide();
                         shData->overlayOpen = false;
                     }
-
                     switch (idx) {
                         case WaiterObject_HomeButton:
                             eventClear(&homeButtonPressEvent);
@@ -3478,7 +3933,6 @@ namespace tsl {
                 }
             }
         }
-
     }
 
     /**
@@ -3509,8 +3963,6 @@ namespace tsl {
 
         envSetNextLoad(ovlPath.c_str(), args.c_str());
     }
-
-
 
     /**
      * @brief libtesla's main function
@@ -3544,7 +3996,6 @@ namespace tsl {
         overlay->initScreen();
         overlay->changeTo(overlay->loadInitialGui());
 
-
         // Argument parsing
         for (u8 arg = 0; arg < argc; arg++) {
             if (strcasecmp(argv[arg], "--skipCombo") == 0) {
@@ -3553,19 +4004,16 @@ namespace tsl {
             }
         }
 
-
         while (shData.running) {
 
             eventWait(&shData.comboEvent, UINT64_MAX);
             eventClear(&shData.comboEvent);
             shData.overlayOpen = true;
 
-
             hlp::requestForeground(true);
 
             overlay->show();
             overlay->clearScreen();
-
 
             while (shData.running) {
                 overlay->loop();
@@ -3606,7 +4054,6 @@ namespace tsl {
 
         return 0;
     }
-
 }
 
 
@@ -3620,14 +4067,12 @@ namespace tsl::cfg {
     u16 LayerPosY   = 0;
     u16 FramebufferWidth  = 0;
     u16 FramebufferHeight = 0;
-    u16 FramebufferWidthForSwizzling = 0;
     u64 launchCombo = HidNpadButton_L | HidNpadButton_Down | HidNpadButton_StickR;
 }
 
 extern "C" {
 
     u32 __nx_applet_type = AppletType_None;
-    u32 __nx_fs_num_sessions = 1;
     u32  __nx_nv_transfermem_size = 0x40000;
     ViLayerFlags __nx_vi_stray_layer_flags = (ViLayerFlags)0;
 
