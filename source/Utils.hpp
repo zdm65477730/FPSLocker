@@ -244,7 +244,6 @@ struct DisplayData {
 std::vector<Title> titles;
 std::string TV_name = "Unknown";
 
-
 bool file_exists(const char *filename)
 {
     struct stat buffer;
