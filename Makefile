@@ -57,7 +57,7 @@ NO_ICON		:=  1
 #---------------------------------------------------------------------------------
 ARCH		:= -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE -flto=auto
 
-FLAGS		:= -g -Wall -O2 -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables -fno-unwind-tables \
+CFLAGS		:= -g -Wall -O2 -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables -fno-unwind-tables \
 			$(ARCH) $(DEFINES)
 
 CFLAGS		+= $(INCLUDE) -D__SWITCH__ -DAPPTITLE="\"$(APP_TITLE)\"" -DVERSION="\"$(APP_VERSION)\"" -DNDEBUG -DASMJIT_EMBED -DASMJIT_BUILD_RELEASE -DASMJIT_NO_X86 -DASMJIT_NO_DEPRECATED -DASMJIT_NO_ABI_NAMESPACE -DASMJIT_NO_JIT -DASMJIT_NO_LOGGING -DASMJIT_NO_VALIDATION

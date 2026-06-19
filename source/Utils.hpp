@@ -983,8 +983,40 @@ std::string getAppName(uint64_t Tid)
 			return (std::string)returnTID;			
 		}
 	}
-	
-	NacpLanguageEntry* languageEntry = &nacp->lang_data.lang[getNacpLanguage()];
+
+	uint8_t langId;
+	if (R_SUCCEEDED(rc = setInitialize())) {
+		u64 languageCode = 0;
+		if (R_SUCCEEDED(rc = setGetSystemLanguage(&languageCode))) {
+			SetLanguage language = SetLanguage_ENUS;
+			if (R_SUCCEEDED(rc = setMakeLanguage(languageCode, &language))) {
+				switch(language) {
+					case SetLanguage_ENUS:   langId = 0; break;
+					case SetLanguage_ENGB:   langId = 1; break;
+					case SetLanguage_JA:     langId = 2; break;
+					case SetLanguage_FR:     langId = 3; break;
+					case SetLanguage_DE:     langId = 4; break;
+					case SetLanguage_ES419:  langId = 5; break;
+					case SetLanguage_ES:     langId = 6; break;
+					case SetLanguage_IT:     langId = 7; break;
+					case SetLanguage_NL:     langId = 8; break;
+					case SetLanguage_FRCA:   langId = 9; break;
+					case SetLanguage_PT:     langId = 10; break;
+					case SetLanguage_RU:     langId = 11; break;
+					case SetLanguage_KO:     langId = 12; break;
+					case SetLanguage_ZHTW:
+					case SetLanguage_ZHHANT: langId = 13; break;
+					case SetLanguage_ZHCN:
+					case SetLanguage_ZHHANS: langId = 14; break;
+					case SetLanguage_PTBR:   langId = 15; break;
+					default:                 langId = 0; break;
+				}
+			}
+		}
+		setExit();
+	}
+
+	NacpLanguageEntry* languageEntry = &nacp->lang_data.lang[langId];
 	if (languageEntry->name[0] == 0) {
 		for (size_t i = 0; i < 16; i++) {
 			if (nacp->lang_data.lang[i].name[0] != 0) {
